@@ -6,6 +6,6 @@
 ## Integrantes
  - Viviana Velasco Montero
  - 
- -
+ -Eduardo Martinez Alonso
  -
 
