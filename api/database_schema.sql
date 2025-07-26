@@ -366,13 +366,14 @@ CREATE TRIGGER update_stock_trigger AFTER INSERT ON public.order_items FOR EACH 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO public.profiles (id, first_name, last_name, email_verified)
-    VALUES (
+    INSERT INTO public.profiles (id, first_name, last_name, phone, email_verified)
+    VALUES (    
         NEW.id,
         NEW.raw_user_meta_data->>'first_name',
         NEW.raw_user_meta_data->>'last_name',
+        NEW.raw_user_meta_data->>'phone',
         NEW.email_confirmed_at IS NOT NULL
-    );
+    );  
     RETURN NEW;
 END;
 $$ language 'plpgsql' SECURITY DEFINER;
@@ -381,6 +382,28 @@ $$ language 'plpgsql' SECURITY DEFINER;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Función para actualizar el estado de verificación de email
+CREATE OR REPLACE FUNCTION public.update_email_verified()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Actualizar el campo email_verified en profiles cuando se confirma el email
+    IF NEW.email_confirmed_at IS NOT NULL AND OLD.email_confirmed_at IS NULL THEN
+        UPDATE public.profiles 
+        SET email_verified = true, updated_at = now()
+        WHERE id = NEW.id;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Crear trigger para actualizar email_verified cuando se confirma el email
+CREATE TRIGGER on_auth_user_updated
+    AFTER UPDATE ON auth.users
+    FOR EACH ROW
+    EXECUTE FUNCTION public.update_email_verified();
+
 
 -- =====================================================
 -- ROW LEVEL SECURITY (RLS)
