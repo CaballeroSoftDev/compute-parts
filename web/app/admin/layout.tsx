@@ -1,15 +1,18 @@
 import type React from "react"
 import { AdminLayout } from "@/components/admin-layout"
 import { AdminProvider } from "@/lib/admin-context"
+import { AdminGuard } from "@/components/auth-guard"
 
 export default function Layout({
-  children,
+	children,
 }: {
-  children: React.ReactNode
+	children: React.ReactNode
 }) {
-  return (
-    <AdminProvider>
-      <AdminLayout>{children}</AdminLayout>
-    </AdminProvider>
-  )
+	return (
+		<AdminGuard>
+			<AdminProvider>
+				<AdminLayout>{children}</AdminLayout>
+			</AdminProvider>
+		</AdminGuard>
+	)
 }
