@@ -17,6 +17,7 @@ CREATE TABLE public.profiles (
     first_name TEXT,
     last_name TEXT,
     phone TEXT,
+    role TEXT DEFAULT 'cliente' CHECK (role IN ('superadmin', 'admin', 'cliente')),
     avatar_url TEXT,
     address TEXT,
     city TEXT,
@@ -274,6 +275,9 @@ CREATE TABLE public.site_settings (
 -- ÍNDICES PARA OPTIMIZACIÓN
 -- =====================================================
 
+-- Crear índice para optimizar consultas por rol
+CREATE INDEX idx_profiles_role ON public.profiles(role);
+
 -- Índices para productos
 CREATE INDEX idx_products_category_id ON public.products(category_id);
 CREATE INDEX idx_products_brand_id ON public.products(brand_id);
@@ -366,13 +370,14 @@ CREATE TRIGGER update_stock_trigger AFTER INSERT ON public.order_items FOR EACH 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO public.profiles (id, first_name, last_name, phone, email_verified)
+    INSERT INTO public.profiles (id, first_name, last_name, phone, email_verified, role)
     VALUES (    
         NEW.id,
         NEW.raw_user_meta_data->>'first_name',
         NEW.raw_user_meta_data->>'last_name',
         NEW.raw_user_meta_data->>'phone',
-        NEW.email_confirmed_at IS NOT NULL
+        NEW.email_confirmed_at IS NOT NULL,
+        COALESCE(NEW.raw_user_meta_data->>'role', 'cliente')
     );  
     RETURN NEW;
 END;
@@ -430,14 +435,32 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
 
 -- Políticas para perfiles
-CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Users can view own profile" ON public.profiles 
+FOR SELECT USING (auth.uid() = id OR auth.jwt() ->> 'role' IN ('admin', 'superadmin'));
+
+CREATE POLICY "Users can update own profile" ON public.profiles 
+FOR UPDATE USING (auth.uid() = id);
+
+-- Política para que superadmin pueda gestionar perfiles
+CREATE POLICY "Superadmin can manage all profiles" ON public.profiles 
+FOR ALL USING (auth.jwt() ->> 'role' = 'superadmin');
+
+-- Política para que admin pueda ver perfiles pero no modificar roles
+CREATE POLICY "Admin can view profiles" ON public.profiles 
+FOR SELECT USING (auth.jwt() ->> 'role' = 'admin');
+
 
 -- Políticas para productos (lectura pública, escritura solo admin)
 CREATE POLICY "Products are viewable by everyone" ON public.products FOR SELECT USING (true);
-CREATE POLICY "Products are insertable by admin" ON public.products FOR INSERT WITH CHECK (auth.jwt() ->> 'role' = 'admin');
-CREATE POLICY "Products are updatable by admin" ON public.products FOR UPDATE USING (auth.jwt() ->> 'role' = 'admin');
-CREATE POLICY "Products are deletable by admin" ON public.products FOR DELETE USING (auth.jwt() ->> 'role' = 'admin');
+
+CREATE POLICY "Products are insertable by admin" ON public.products 
+FOR INSERT WITH CHECK (auth.jwt() ->> 'role' IN ('admin', 'superadmin'));
+
+CREATE POLICY "Products are updatable by admin" ON public.products 
+FOR UPDATE USING (auth.jwt() ->> 'role' IN ('admin', 'superadmin'));
+
+CREATE POLICY "Products are deletable by admin" ON public.products 
+FOR DELETE USING (auth.jwt() ->> 'role' IN ('admin', 'superadmin'));
 
 -- Políticas para carrito
 CREATE POLICY "Users can view own cart" ON public.cart_items FOR SELECT USING (auth.uid() = user_id);
@@ -451,9 +474,13 @@ CREATE POLICY "Users can insert own favorites" ON public.favorites FOR INSERT WI
 CREATE POLICY "Users can delete own favorites" ON public.favorites FOR DELETE USING (auth.uid() = user_id);
 
 -- Políticas para pedidos
-CREATE POLICY "Users can view own orders" ON public.orders FOR SELECT USING (auth.uid() = user_id OR auth.jwt() ->> 'role' = 'admin');
+CREATE POLICY "Users can view own orders" ON public.orders 
+FOR SELECT USING (auth.uid() = user_id OR auth.jwt() ->> 'role' IN ('admin', 'superadmin'));
+
 CREATE POLICY "Users can insert own orders" ON public.orders FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Admins can update orders" ON public.orders FOR UPDATE USING (auth.jwt() ->> 'role' = 'admin');
+
+CREATE POLICY "Admins can update orders" ON public.orders 
+FOR UPDATE USING (auth.jwt() ->> 'role' IN ('admin', 'superadmin'));
 
 -- Políticas para reseñas
 CREATE POLICY "Reviews are viewable by everyone" ON public.reviews FOR SELECT USING (is_approved = true);
@@ -569,3 +596,6 @@ COMMENT ON COLUMN public.products.specifications IS 'Especificaciones técnicas 
 COMMENT ON COLUMN public.products.dimensions IS 'Dimensiones del producto {length, width, height}';
 COMMENT ON COLUMN public.orders.shipping_address IS 'Dirección completa para respaldo en formato JSON';
 COMMENT ON COLUMN public.notifications.data IS 'Datos adicionales de la notificación en formato JSON'; 
+
+COMMENT ON COLUMN public.profiles.role IS 'Rol del usuario: superadmin, admin, cliente';
+COMMENT ON INDEX idx_profiles_role IS 'Índice para optimizar consultas por rol de usuario'; 
