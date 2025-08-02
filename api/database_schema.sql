@@ -39,7 +39,6 @@ CREATE TABLE public.categories (
     slug TEXT UNIQUE,
     image_url TEXT,
     is_active BOOLEAN DEFAULT true,
-    sort_order INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -433,6 +432,8 @@ ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.coupon_usage ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.brands ENABLE ROW LEVEL SECURITY;
 
 -- Políticas para perfiles
 CREATE POLICY "Users can view own profile" ON public.profiles 
@@ -461,6 +462,41 @@ FOR UPDATE USING (auth.jwt() ->> 'role' IN ('admin', 'superadmin'));
 
 CREATE POLICY "Products are deletable by admin" ON public.products 
 FOR DELETE USING (auth.jwt() ->> 'role' IN ('admin', 'superadmin'));
+
+-- Políticas para categories
+CREATE POLICY "Categories are viewable by everyone" ON public.categories FOR SELECT USING (true);
+
+CREATE POLICY "Categories are insertable by admin" ON public.categories
+FOR INSERT WITH CHECK (
+    (auth.jwt() ->> 'role') = ANY (ARRAY['admin', 'superadmin'])
+);
+
+CREATE POLICY "Categories are updatable by admin" ON public.categories
+FOR UPDATE USING (
+    (auth.jwt() ->> 'role') = ANY (ARRAY['admin', 'superadmin'])
+);
+
+CREATE POLICY "Categories are deletable by admin" ON public.categories
+FOR DELETE USING (
+    (auth.jwt() ->> 'role') = ANY (ARRAY['admin', 'superadmin'])
+);
+
+-- Políticas para brands
+CREATE POLICY "Brands are viewable by everyone" ON public.brands
+FOR SELECT USING (true);
+
+CREATE POLICY "Brands are insertable by admin" ON public.brands
+FOR INSERT WITH CHECK (
+    (auth.jwt() ->> 'role') = ANY (ARRAY['admin', 'superadmin'])
+);
+
+CREATE POLICY "Brands are updatable by admin" ON public.brands
+FOR UPDATE USING (
+    (auth.jwt() ->> 'role') = ANY (ARRAY['admin', 'superadmin'])
+);
+
+CREATE POLICY "Brands are deletable by admin" ON public.brands
+FOR DELETE USING ((auth.jwt() ->> 'role') = ANY (ARRAY['admin', 'superadmin']));
 
 -- Políticas para carrito
 CREATE POLICY "Users can view own cart" ON public.cart_items FOR SELECT USING (auth.uid() = user_id);
@@ -493,15 +529,15 @@ CREATE POLICY "Users can update own reviews" ON public.reviews FOR UPDATE USING 
 -- =====================================================
 
 -- Insertar categorías iniciales
-INSERT INTO public.categories (name, description, slug, sort_order) VALUES
-('Procesadores', 'Procesadores Intel y AMD para computadoras', 'procesadores', 1),
-('Tarjetas Gráficas', 'Tarjetas gráficas NVIDIA y AMD', 'tarjetas-graficas', 2),
-('Memorias', 'Memoria RAM DDR4 y DDR5', 'memorias', 3),
-('Almacenamiento', 'SSDs y discos duros', 'almacenamiento', 4),
-('Placas Base', 'Motherboards para diferentes sockets', 'placas-base', 5),
-('Fuentes de Poder', 'Fuentes de alimentación certificadas', 'fuentes-de-poder', 6),
-('Gabinetes', 'Gabinetes y cajas para PC', 'gabinetes', 7),
-('Monitores', 'Monitores gaming y profesionales', 'monitores', 8);
+INSERT INTO public.categories (name, description, slug) VALUES
+('Procesadores', 'Procesadores Intel y AMD para computadoras', 'procesadores'),
+('Tarjetas Gráficas', 'Tarjetas gráficas NVIDIA y AMD', 'tarjetas-graficas'),
+('Memorias', 'Memoria RAM DDR4 y DDR5', 'memorias'),
+('Almacenamiento', 'SSDs y discos duros', 'almacenamiento'),
+('Placas Base', 'Motherboards para diferentes sockets', 'placas-base'),
+('Fuentes de Poder', 'Fuentes de alimentación certificadas', 'fuentes-de-poder'),
+('Gabinetes', 'Gabinetes y cajas para PC', 'gabinetes'),
+('Monitores', 'Monitores gaming y profesionales', 'monitores');
 
 -- Insertar marcas iniciales
 INSERT INTO public.brands (name, description, website) VALUES

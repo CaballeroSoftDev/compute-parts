@@ -13,7 +13,7 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: ToastActionElement;
-  variant?: 'default' | 'destructive'; // Added variant type
+  variant?: 'default' | 'destructive' | 'success' | 'warning' | 'info';
 };
 
 const actionTypes = {
@@ -169,6 +169,12 @@ function toast({ title, description, variant = 'default' }: Toast) {
   };
 }
 
+// Helper functions for different toast variants
+const toastSuccess = (props: Omit<Toast, 'variant'>) => toast({ ...props, variant: 'success' });
+const toastError = (props: Omit<Toast, 'variant'>) => toast({ ...props, variant: 'destructive' });
+const toastWarning = (props: Omit<Toast, 'variant'>) => toast({ ...props, variant: 'warning' });
+const toastInfo = (props: Omit<Toast, 'variant'>) => toast({ ...props, variant: 'info' });
+
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState);
 
@@ -185,8 +191,12 @@ function useToast() {
   return {
     ...state,
     toast,
+    success: toastSuccess,
+    error: toastError,
+    warning: toastWarning,
+    info: toastInfo,
     dismiss: (toastId?: string) => dispatch({ type: 'DISMISS_TOAST', toastId }),
   };
 }
 
-export { useToast, toast };
+export { useToast, toast, toastSuccess, toastError, toastWarning, toastInfo };

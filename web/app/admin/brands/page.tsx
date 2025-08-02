@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -24,120 +24,210 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, MoreHorizontal, Edit, Trash2, Eye, Building2, Package, ExternalLink } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Plus, Search, MoreHorizontal, Edit, Trash2, Eye, Building2, Loader2, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useAdmin } from '@/lib/admin-context';
+import { useAdminBrands } from '@/lib/hooks/use-admin-brands';
+import { ImageUpload } from '@/components/ui/image-upload';
+import type { AdminBrand, CreateBrandForm, UpdateBrandForm } from '@/lib/types/admin';
 
 export default function BrandsPage() {
-  const { brands, addBrand, updateBrand, deleteBrand } = useAdmin();
-  const [searchTerm, setSearchTerm] = useState('');
+  const { toast } = useToast();
+  const { brands, loading, error, createBrand, updateBrand, deleteBrand, refreshBrands, clearError } = useAdminBrands();
+
+  // Limpiar estados al desmontar el componente
+  useEffect(() => {
+    return () => {
+      clearError();
+    };
+  }, [clearError]);
+
+  // Estados para los diálogos
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [selectedBrand, setSelectedBrand] = useState<any>(null);
-  const [formData, setFormData] = useState<{
-    name: string;
-    description: string;
-    website: string;
-  }>({
+  const [selectedBrand, setSelectedBrand] = useState<AdminBrand | null>(null);
+  const [formLoading, setFormLoading] = useState(false);
+
+  // Estados para el formulario
+  const [formData, setFormData] = useState<CreateBrandForm>({
     name: '',
     description: '',
     website: '',
+    is_active: true,
   });
-  const { toast } = useToast();
+
+  // Estados para filtros
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Filtrar marcas
   const filteredBrands = brands.filter(
     (brand) =>
       brand.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      brand.description.toLowerCase().includes(searchTerm.toLowerCase())
+      (brand.description && brand.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  // Crear marca
-  const handleCreateBrand = () => {
-    if (!formData.name.trim()) {
+  // Manejadores de formularios
+  const handleCreateBrand = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormLoading(true);
+
+    try {
+      await createBrand(formData);
+      setIsAddDialogOpen(false);
+      setFormData({
+        name: '',
+        description: '',
+        website: '',
+        is_active: true,
+      });
+      toast({
+        title: 'Marca creada',
+        description: 'La marca se ha creado exitosamente',
+        variant: 'success',
+      });
+    } catch (error) {
       toast({
         title: 'Error',
-        description: 'El nombre de la marca es requerido',
+        description: error instanceof Error ? error.message : 'Error al crear la marca',
         variant: 'destructive',
       });
-      return;
+    } finally {
+      setFormLoading(false);
     }
-
-    addBrand({
-      name: formData.name.trim(),
-      description: formData.description.trim(),
-      website: formData.website.trim() || undefined,
-    });
-
-    setFormData({ name: '', description: '', website: '' });
-    setIsAddDialogOpen(false);
-    toast({
-      title: 'Marca creada',
-      description: 'La marca se ha creado exitosamente',
-    });
   };
 
-  // Editar marca
-  const handleEditBrand = () => {
-    if (!selectedBrand || !formData.name.trim()) {
-      toast({
-        title: 'Error',
-        description: 'El nombre de la marca es requerido',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    updateBrand(selectedBrand.id, {
-      name: formData.name.trim(),
-      description: formData.description.trim(),
-      website: formData.website.trim() || undefined,
-    });
-
-    setIsEditDialogOpen(false);
-    setSelectedBrand(null);
-    setFormData({ name: '', description: '', website: '' });
-    toast({
-      title: 'Marca actualizada',
-      description: 'La marca se ha actualizado exitosamente',
-    });
-  };
-
-  // Eliminar marca
-  const handleDeleteBrand = () => {
+  const handleUpdateBrand = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!selectedBrand) return;
 
-    deleteBrand(selectedBrand.id);
-    setIsDeleteDialogOpen(false);
-    setSelectedBrand(null);
-    toast({
-      title: 'Marca eliminada',
-      description: 'La marca se ha eliminado exitosamente',
-    });
+    setFormLoading(true);
+    try {
+      await updateBrand(selectedBrand.id, formData);
+      setIsEditDialogOpen(false);
+      setSelectedBrand(null);
+      setFormData({
+        name: '',
+        description: '',
+        website: '',
+        is_active: true,
+      });
+      toast({
+        title: 'Marca actualizada',
+        description: 'La marca se ha actualizado exitosamente',
+        variant: 'success',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Error al actualizar la marca',
+        variant: 'destructive',
+      });
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleDeleteBrand = async () => {
+    if (!selectedBrand) return;
+
+    try {
+      await deleteBrand(selectedBrand.id);
+      setIsDeleteDialogOpen(false);
+      setSelectedBrand(null);
+      toast({
+        title: 'Marca eliminada',
+        description: 'La marca se ha eliminado exitosamente',
+        variant: 'success',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Error al eliminar la marca',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Manejador para actualizar datos
+  const handleRefresh = async () => {
+    try {
+      clearError(); // Limpiar errores previos
+      await refreshBrands();
+      toast({
+        title: 'Datos actualizados',
+        description: 'La lista de marcas se ha actualizado',
+        variant: 'info',
+      });
+    } catch (error) {
+      console.error('Error refreshing brands:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'No se pudo actualizar la lista de marcas',
+        variant: 'destructive',
+      });
+    }
   };
 
   // Abrir diálogos
-  const openEditDialog = (brand: any) => {
+  const openEditDialog = (brand: AdminBrand) => {
+    clearError(); // Limpiar errores previos
     setSelectedBrand(brand);
     setFormData({
       name: brand.name,
-      description: brand.description,
+      description: brand.description || '',
       website: brand.website || '',
+      is_active: brand.is_active,
     });
     setIsEditDialogOpen(true);
   };
 
-  const openDeleteDialog = (brand: any) => {
+  const openDeleteDialog = (brand: AdminBrand) => {
     setSelectedBrand(brand);
     setIsDeleteDialogOpen(true);
   };
 
-  const openViewDialog = (brand: any) => {
+  const openViewDialog = (brand: AdminBrand) => {
     setSelectedBrand(brand);
     setIsViewDialogOpen(true);
   };
+
+  if (error && !loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="text-center">
+          <Building2 className="mx-auto mb-4 h-12 w-12 text-red-500" />
+          <h3 className="text-lg font-semibold text-gray-900">Error al cargar marcas</h3>
+          <p className="text-gray-500 max-w-md">{error}</p>
+          <div className="mt-4 space-x-2">
+            <Button
+              onClick={handleRefresh}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Reintentando...
+                </>
+              ) : (
+                'Reintentar'
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                clearError();
+                window.location.reload();
+              }}
+            >
+              Recargar página
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -154,10 +244,20 @@ export default function BrandsPage() {
           <h1 className="text-2xl font-bold">Gestión de Marcas</h1>
           <p className="text-gray-500">Administra las marcas de productos</p>
         </div>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Agregar Marca
-        </Button>
+        <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={loading}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? 'Actualizando...' : 'Actualizar'}
+          </Button>
+          <Button onClick={() => { clearError(); setIsAddDialogOpen(true); }}>
+            <Plus className="mr-2 h-4 w-4" />
+            Agregar Marca
+          </Button>
+        </div>
       </div>
 
       {/* Estadísticas */}
@@ -173,20 +273,20 @@ export default function BrandsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Productos Totales</CardTitle>
-            <Package className="h-4 w-4 text-blue-500" />
+            <CardTitle className="text-sm font-medium">Marcas Activas</CardTitle>
+            <Building2 className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{brands.reduce((sum, brand) => sum + brand.productCount, 0)}</div>
+            <div className="text-2xl font-bold">{brands.filter((b) => b.is_active).length}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Con Sitio Web</CardTitle>
-            <ExternalLink className="h-4 w-4 text-green-500" />
+            <CardTitle className="text-sm font-medium">Marcas Inactivas</CardTitle>
+            <Building2 className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{brands.filter((brand) => brand.website).length}</div>
+            <div className="text-2xl font-bold">{brands.filter((b) => !b.is_active).length}</div>
           </CardContent>
         </Card>
       </div>
@@ -194,8 +294,8 @@ export default function BrandsPage() {
       {/* Filtros */}
       <Card>
         <CardHeader>
-          <CardTitle>Buscar Marcas</CardTitle>
-          <CardDescription>Encuentra marcas por nombre o descripción</CardDescription>
+          <CardTitle>Filtros</CardTitle>
+          <CardDescription>Busca marcas</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="relative">
@@ -214,81 +314,116 @@ export default function BrandsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Lista de Marcas</CardTitle>
-          <CardDescription>{filteredBrands.length} marcas encontradas</CardDescription>
+          <CardDescription>
+            {loading ? (
+              <div className="flex items-center space-x-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Cargando marcas...</span>
+              </div>
+            ) : (
+              `${filteredBrands.length} marcas encontradas`
+            )}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Descripción</TableHead>
-                <TableHead>Sitio Web</TableHead>
-                <TableHead>Productos</TableHead>
-                <TableHead>Fecha de Creación</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredBrands.map((brand) => (
-                <TableRow key={brand.id}>
-                  <TableCell className="font-medium">{brand.name}</TableCell>
-                  <TableCell className="max-w-xs truncate">{brand.description}</TableCell>
-                  <TableCell>
-                    {brand.website ? (
-                      <a
-                        href={brand.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        Sitio web
-                      </a>
-                    ) : (
-                      <span className="text-gray-400">Sin sitio web</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{brand.productCount} productos</Badge>
-                  </TableCell>
-                  <TableCell>{brand.createdAt}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                        >
-                          <span className="sr-only">Abrir menú</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => openViewDialog(brand)}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          Ver detalles
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => openEditDialog(brand)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => openDeleteDialog(brand)}
-                          disabled={brand.productCount > 0}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {loading ? (
+            <div className="flex h-32 items-center justify-center">
+              <div className="text-center">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                <p className="text-sm text-gray-500">
+                  {brands.length === 0 ? 'Cargando marcas...' : 'Actualizando datos...'}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Marca</TableHead>
+                  <TableHead>Descripción</TableHead>
+                  <TableHead>Sitio Web</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredBrands.map((brand) => (
+                  <TableRow key={brand.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center space-x-3">
+                        <div>
+                          <div className="font-medium">{brand.name}</div>
+                          {brand.products_count !== undefined && (
+                            <div className="text-sm text-gray-500">{brand.products_count} productos</div>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {brand.description ? (
+                        <div className="max-w-xs truncate">{brand.description}</div>
+                      ) : (
+                        <span className="text-gray-400">Sin descripción</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {brand.website ? (
+                        <a
+                          href={brand.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-600 hover:underline"
+                        >
+                          Visitar sitio
+                        </a>
+                      ) : (
+                        <span className="text-gray-400">Sin sitio web</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {brand.is_active ? (
+                        <Badge className="bg-green-100 text-green-800">Activa</Badge>
+                      ) : (
+                        <Badge className="bg-gray-100 text-gray-800">Inactiva</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                          >
+                            <span className="sr-only">Abrir menú</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => openViewDialog(brand)}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            Ver detalles
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openEditDialog(brand)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => openDeleteDialog(brand)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
@@ -302,7 +437,10 @@ export default function BrandsPage() {
             <DialogTitle>Agregar Nueva Marca</DialogTitle>
             <DialogDescription>Completa la información de la nueva marca.</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <form
+            onSubmit={handleCreateBrand}
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="name">Nombre *</Label>
               <Input
@@ -310,6 +448,7 @@ export default function BrandsPage() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Nombre de la marca"
+                required
               />
             </div>
             <div className="space-y-2">
@@ -322,26 +461,40 @@ export default function BrandsPage() {
                 rows={3}
               />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="website">Sitio Web</Label>
               <Input
                 id="website"
                 value={formData.website}
                 onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                placeholder="https://ejemplo.com"
-                type="url"
+                placeholder="https://www.marca.com"
               />
             </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsAddDialogOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button onClick={handleCreateBrand}>Crear Marca</Button>
-          </DialogFooter>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="is_active"
+                checked={formData.is_active}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked as boolean })}
+              />
+              <Label htmlFor="is_active">Marca activa</Label>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsAddDialogOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={formLoading}
+              >
+                {formLoading ? 'Guardando...' : 'Crear Marca'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
@@ -355,13 +508,17 @@ export default function BrandsPage() {
             <DialogTitle>Editar Marca</DialogTitle>
             <DialogDescription>Modifica la información de la marca.</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <form
+            onSubmit={handleUpdateBrand}
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="edit-name">Nombre *</Label>
               <Input
                 id="edit-name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
               />
             </div>
             <div className="space-y-2">
@@ -373,25 +530,39 @@ export default function BrandsPage() {
                 rows={3}
               />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="edit-website">Sitio Web</Label>
               <Input
                 id="edit-website"
                 value={formData.website}
                 onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                type="url"
               />
             </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsEditDialogOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button onClick={handleEditBrand}>Guardar Cambios</Button>
-          </DialogFooter>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="edit-is_active"
+                checked={formData.is_active}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked as boolean })}
+              />
+              <Label htmlFor="edit-is_active">Marca activa</Label>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsEditDialogOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={formLoading}
+              >
+                {formLoading ? 'Guardando...' : 'Guardar Cambios'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
@@ -400,41 +571,56 @@ export default function BrandsPage() {
         open={isViewDialogOpen}
         onOpenChange={setIsViewDialogOpen}
       >
-        <DialogContent className="sm:max-w-[400px]">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Detalles de la Marca</DialogTitle>
           </DialogHeader>
           {selectedBrand && (
             <div className="space-y-4">
-              <div>
-                <Label className="text-sm font-medium">Nombre</Label>
-                <p className="mt-1 text-sm">{selectedBrand.name}</p>
+              <div className="flex items-center space-x-4">
+                <div>
+                  <h3 className="text-lg font-medium">{selectedBrand.name}</h3>
+                  {selectedBrand.products_count !== undefined && (
+                    <p className="text-sm text-gray-500">{selectedBrand.products_count} productos</p>
+                  )}
+                </div>
               </div>
-              <div>
-                <Label className="text-sm font-medium">Descripción</Label>
-                <p className="mt-1 text-sm text-gray-600">{selectedBrand.description || 'Sin descripción'}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Estado</label>
+                  <div className="mt-1">
+                    {selectedBrand.is_active ? (
+                      <Badge className="bg-green-100 text-green-800">Activa</Badge>
+                    ) : (
+                      <Badge className="bg-gray-100 text-gray-800">Inactiva</Badge>
+                    )}
+                  </div>
+                </div>
+
               </div>
+              {selectedBrand.description && (
+                <div>
+                  <label className="text-sm font-medium">Descripción</label>
+                  <p className="mt-1 text-sm text-gray-600">{selectedBrand.description}</p>
+                </div>
+              )}
+
               {selectedBrand.website && (
                 <div>
-                  <Label className="text-sm font-medium">Sitio Web</Label>
+                  <label className="text-sm font-medium">Sitio Web</label>
                   <a
                     href={selectedBrand.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-1 flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+                    className="mt-1 block text-sm text-blue-600 hover:underline"
                   >
-                    <ExternalLink className="h-3 w-3" />
                     {selectedBrand.website}
                   </a>
                 </div>
               )}
               <div>
-                <Label className="text-sm font-medium">Productos</Label>
-                <p className="mt-1 text-sm">{selectedBrand.productCount} productos</p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium">Fecha de creación</Label>
-                <p className="mt-1 text-sm">{selectedBrand.createdAt}</p>
+                <label className="text-sm font-medium">Fecha de creación</label>
+                <p className="text-sm">{new Date(selectedBrand.created_at).toLocaleDateString()}</p>
               </div>
             </div>
           )}
@@ -470,14 +656,13 @@ export default function BrandsPage() {
             </DialogDescription>
           </DialogHeader>
           {selectedBrand && (
-            <div className="py-4">
-              <p className="font-medium">{selectedBrand.name}</p>
-              <p className="text-sm text-gray-500">{selectedBrand.description}</p>
-              {selectedBrand.productCount > 0 && (
-                <p className="mt-2 text-sm text-red-600">
-                  No se puede eliminar: tiene {selectedBrand.productCount} productos asociados
-                </p>
-              )}
+            <div className="flex items-center space-x-3 py-4">
+              <div>
+                <p className="font-medium">{selectedBrand.name}</p>
+                {selectedBrand.products_count !== undefined && (
+                  <p className="text-sm text-gray-500">{selectedBrand.products_count} productos</p>
+                )}
+              </div>
             </div>
           )}
           <DialogFooter>
@@ -490,7 +675,6 @@ export default function BrandsPage() {
             <Button
               variant="destructive"
               onClick={handleDeleteBrand}
-              disabled={selectedBrand?.productCount > 0}
             >
               Eliminar
             </Button>
