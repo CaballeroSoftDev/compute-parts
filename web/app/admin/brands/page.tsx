@@ -1,10 +1,10 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,120 +20,124 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Plus, Search, MoreHorizontal, Edit, Trash2, Eye, Building2, Package, ExternalLink } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { useAdmin } from "@/lib/admin-context"
+} from '@/components/ui/dropdown-menu';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Plus, Search, MoreHorizontal, Edit, Trash2, Eye, Building2, Package, ExternalLink } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useAdmin } from '@/lib/admin-context';
 
 export default function BrandsPage() {
-  const { brands, addBrand, updateBrand, deleteBrand } = useAdmin()
-  const [searchTerm, setSearchTerm] = useState("")
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
-  const [selectedBrand, setSelectedBrand] = useState<any>(null)
-  const [formData, setFormData] = useState<{ name: string; description: string; website: string }>({
-    name: "",
-    description: "",
-    website: "",
-  })
-  const { toast } = useToast()
+  const { brands, addBrand, updateBrand, deleteBrand } = useAdmin();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [selectedBrand, setSelectedBrand] = useState<any>(null);
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+    website: string;
+  }>({
+    name: '',
+    description: '',
+    website: '',
+  });
+  const { toast } = useToast();
 
   // Filtrar marcas
   const filteredBrands = brands.filter(
     (brand) =>
       brand.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      brand.description.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+      brand.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Crear marca
   const handleCreateBrand = () => {
     if (!formData.name.trim()) {
       toast({
-        title: "Error",
-        description: "El nombre de la marca es requerido",
-        variant: "destructive",
-      })
-      return
+        title: 'Error',
+        description: 'El nombre de la marca es requerido',
+        variant: 'destructive',
+      });
+      return;
     }
 
     addBrand({
       name: formData.name.trim(),
       description: formData.description.trim(),
       website: formData.website.trim() || undefined,
-    })
+    });
 
-    setFormData({ name: "", description: "", website: "" })
-    setIsAddDialogOpen(false)
+    setFormData({ name: '', description: '', website: '' });
+    setIsAddDialogOpen(false);
     toast({
-      title: "Marca creada",
-      description: "La marca se ha creado exitosamente",
-    })
-  }
+      title: 'Marca creada',
+      description: 'La marca se ha creado exitosamente',
+    });
+  };
 
   // Editar marca
   const handleEditBrand = () => {
     if (!selectedBrand || !formData.name.trim()) {
       toast({
-        title: "Error",
-        description: "El nombre de la marca es requerido",
-        variant: "destructive",
-      })
-      return
+        title: 'Error',
+        description: 'El nombre de la marca es requerido',
+        variant: 'destructive',
+      });
+      return;
     }
 
     updateBrand(selectedBrand.id, {
       name: formData.name.trim(),
       description: formData.description.trim(),
       website: formData.website.trim() || undefined,
-    })
+    });
 
-    setIsEditDialogOpen(false)
-    setSelectedBrand(null)
-    setFormData({ name: "", description: "", website: "" })
+    setIsEditDialogOpen(false);
+    setSelectedBrand(null);
+    setFormData({ name: '', description: '', website: '' });
     toast({
-      title: "Marca actualizada",
-      description: "La marca se ha actualizado exitosamente",
-    })
-  }
+      title: 'Marca actualizada',
+      description: 'La marca se ha actualizado exitosamente',
+    });
+  };
 
   // Eliminar marca
   const handleDeleteBrand = () => {
-    if (!selectedBrand) return
+    if (!selectedBrand) return;
 
-    deleteBrand(selectedBrand.id)
-    setIsDeleteDialogOpen(false)
-    setSelectedBrand(null)
+    deleteBrand(selectedBrand.id);
+    setIsDeleteDialogOpen(false);
+    setSelectedBrand(null);
     toast({
-      title: "Marca eliminada",
-      description: "La marca se ha eliminado exitosamente",
-    })
-  }
+      title: 'Marca eliminada',
+      description: 'La marca se ha eliminado exitosamente',
+    });
+  };
 
   // Abrir diálogos
   const openEditDialog = (brand: any) => {
-    setSelectedBrand(brand)
+    setSelectedBrand(brand);
     setFormData({
       name: brand.name,
       description: brand.description,
-      website: brand.website || "",
-    })
-    setIsEditDialogOpen(true)
-  }
+      website: brand.website || '',
+    });
+    setIsEditDialogOpen(true);
+  };
 
   const openDeleteDialog = (brand: any) => {
-    setSelectedBrand(brand)
-    setIsDeleteDialogOpen(true)
-  }
+    setSelectedBrand(brand);
+    setIsDeleteDialogOpen(true);
+  };
 
   const openViewDialog = (brand: any) => {
-    setSelectedBrand(brand)
-    setIsViewDialogOpen(true)
-  }
+    setSelectedBrand(brand);
+    setIsViewDialogOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -141,23 +145,23 @@ export default function BrandsPage() {
       <div className="flex items-center space-x-2 text-sm text-gray-500">
         <span>Admin</span>
         <span>/</span>
-        <span className="text-gray-900 font-medium">Marcas</span>
+        <span className="font-medium text-gray-900">Marcas</span>
       </div>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold">Gestión de Marcas</h1>
           <p className="text-gray-500">Administra las marcas de productos</p>
         </div>
         <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="mr-2 h-4 w-4" />
           Agregar Marca
         </Button>
       </div>
 
       {/* Estadísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Marcas</CardTitle>
@@ -195,7 +199,7 @@ export default function BrandsPage() {
         </CardHeader>
         <CardContent>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
             <Input
               placeholder="Buscar marcas..."
               value={searchTerm}
@@ -235,7 +239,7 @@ export default function BrandsPage() {
                         href={brand.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
                       >
                         <ExternalLink className="h-3 w-3" />
                         Sitio web
@@ -251,7 +255,10 @@ export default function BrandsPage() {
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
+                        <Button
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                        >
                           <span className="sr-only">Abrir menú</span>
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
@@ -286,7 +293,10 @@ export default function BrandsPage() {
       </Card>
 
       {/* Diálogo Agregar Marca */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+      <Dialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+      >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Agregar Nueva Marca</DialogTitle>
@@ -324,7 +334,10 @@ export default function BrandsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsAddDialogOpen(false)}
+            >
               Cancelar
             </Button>
             <Button onClick={handleCreateBrand}>Crear Marca</Button>
@@ -333,7 +346,10 @@ export default function BrandsPage() {
       </Dialog>
 
       {/* Diálogo Editar Marca */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+      >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Editar Marca</DialogTitle>
@@ -368,7 +384,10 @@ export default function BrandsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
               Cancelar
             </Button>
             <Button onClick={handleEditBrand}>Guardar Cambios</Button>
@@ -377,7 +396,10 @@ export default function BrandsPage() {
       </Dialog>
 
       {/* Diálogo Ver Marca */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+      <Dialog
+        open={isViewDialogOpen}
+        onOpenChange={setIsViewDialogOpen}
+      >
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle>Detalles de la Marca</DialogTitle>
@@ -386,11 +408,11 @@ export default function BrandsPage() {
             <div className="space-y-4">
               <div>
                 <Label className="text-sm font-medium">Nombre</Label>
-                <p className="text-sm mt-1">{selectedBrand.name}</p>
+                <p className="mt-1 text-sm">{selectedBrand.name}</p>
               </div>
               <div>
                 <Label className="text-sm font-medium">Descripción</Label>
-                <p className="text-sm text-gray-600 mt-1">{selectedBrand.description || "Sin descripción"}</p>
+                <p className="mt-1 text-sm text-gray-600">{selectedBrand.description || 'Sin descripción'}</p>
               </div>
               {selectedBrand.website && (
                 <div>
@@ -399,7 +421,7 @@ export default function BrandsPage() {
                     href={selectedBrand.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:text-blue-800 mt-1 flex items-center gap-1"
+                    className="mt-1 flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
                   >
                     <ExternalLink className="h-3 w-3" />
                     {selectedBrand.website}
@@ -408,22 +430,25 @@ export default function BrandsPage() {
               )}
               <div>
                 <Label className="text-sm font-medium">Productos</Label>
-                <p className="text-sm mt-1">{selectedBrand.productCount} productos</p>
+                <p className="mt-1 text-sm">{selectedBrand.productCount} productos</p>
               </div>
               <div>
                 <Label className="text-sm font-medium">Fecha de creación</Label>
-                <p className="text-sm mt-1">{selectedBrand.createdAt}</p>
+                <p className="mt-1 text-sm">{selectedBrand.createdAt}</p>
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsViewDialogOpen(false)}
+            >
               Cerrar
             </Button>
             <Button
               onClick={() => {
-                setIsViewDialogOpen(false)
-                if (selectedBrand) openEditDialog(selectedBrand)
+                setIsViewDialogOpen(false);
+                if (selectedBrand) openEditDialog(selectedBrand);
               }}
             >
               Editar Marca
@@ -433,7 +458,10 @@ export default function BrandsPage() {
       </Dialog>
 
       {/* Diálogo Eliminar Marca */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <Dialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle>Eliminar Marca</DialogTitle>
@@ -446,22 +474,29 @@ export default function BrandsPage() {
               <p className="font-medium">{selectedBrand.name}</p>
               <p className="text-sm text-gray-500">{selectedBrand.description}</p>
               {selectedBrand.productCount > 0 && (
-                <p className="text-sm text-red-600 mt-2">
+                <p className="mt-2 text-sm text-red-600">
                   No se puede eliminar: tiene {selectedBrand.productCount} productos asociados
                 </p>
               )}
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
               Cancelar
             </Button>
-            <Button variant="destructive" onClick={handleDeleteBrand} disabled={selectedBrand?.productCount > 0}>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteBrand}
+              disabled={selectedBrand?.productCount > 0}
+            >
               Eliminar
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

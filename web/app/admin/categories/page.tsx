@@ -1,10 +1,10 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,116 +20,119 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Plus, Search, MoreHorizontal, Edit, Trash2, Eye, Tags, Package } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { useAdmin } from "@/lib/admin-context"
+} from '@/components/ui/dropdown-menu';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Plus, Search, MoreHorizontal, Edit, Trash2, Eye, Tags, Package } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useAdmin } from '@/lib/admin-context';
 
 export default function CategoriesPage() {
-  const { categories, addCategory, updateCategory, deleteCategory } = useAdmin()
-  const [searchTerm, setSearchTerm] = useState("")
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState<any>(null)
-  const [formData, setFormData] = useState<{ name: string; description: string }>({
-    name: "",
-    description: "",
-  })
-  const { toast } = useToast()
+  const { categories, addCategory, updateCategory, deleteCategory } = useAdmin();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<any>(null);
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+  }>({
+    name: '',
+    description: '',
+  });
+  const { toast } = useToast();
 
   // Filtrar categorías
   const filteredCategories = categories.filter(
     (category) =>
       category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      category.description.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+      category.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Crear categoría
   const handleCreateCategory = () => {
     if (!formData.name.trim()) {
       toast({
-        title: "Error",
-        description: "El nombre de la categoría es requerido",
-        variant: "destructive",
-      })
-      return
+        title: 'Error',
+        description: 'El nombre de la categoría es requerido',
+        variant: 'destructive',
+      });
+      return;
     }
 
     addCategory({
       name: formData.name.trim(),
       description: formData.description.trim(),
-    })
+    });
 
-    setFormData({ name: "", description: "" })
-    setIsAddDialogOpen(false)
+    setFormData({ name: '', description: '' });
+    setIsAddDialogOpen(false);
     toast({
-      title: "Categoría creada",
-      description: "La categoría se ha creado exitosamente",
-    })
-  }
+      title: 'Categoría creada',
+      description: 'La categoría se ha creado exitosamente',
+    });
+  };
 
   // Editar categoría
   const handleEditCategory = () => {
     if (!selectedCategory || !formData.name.trim()) {
       toast({
-        title: "Error",
-        description: "El nombre de la categoría es requerido",
-        variant: "destructive",
-      })
-      return
+        title: 'Error',
+        description: 'El nombre de la categoría es requerido',
+        variant: 'destructive',
+      });
+      return;
     }
 
     updateCategory(selectedCategory.id, {
       name: formData.name.trim(),
       description: formData.description.trim(),
-    })
+    });
 
-    setIsEditDialogOpen(false)
-    setSelectedCategory(null)
-    setFormData({ name: "", description: "" })
+    setIsEditDialogOpen(false);
+    setSelectedCategory(null);
+    setFormData({ name: '', description: '' });
     toast({
-      title: "Categoría actualizada",
-      description: "La categoría se ha actualizado exitosamente",
-    })
-  }
+      title: 'Categoría actualizada',
+      description: 'La categoría se ha actualizado exitosamente',
+    });
+  };
 
   // Eliminar categoría
   const handleDeleteCategory = () => {
-    if (!selectedCategory) return
+    if (!selectedCategory) return;
 
-    deleteCategory(selectedCategory.id)
-    setIsDeleteDialogOpen(false)
-    setSelectedCategory(null)
+    deleteCategory(selectedCategory.id);
+    setIsDeleteDialogOpen(false);
+    setSelectedCategory(null);
     toast({
-      title: "Categoría eliminada",
-      description: "La categoría se ha eliminado exitosamente",
-    })
-  }
+      title: 'Categoría eliminada',
+      description: 'La categoría se ha eliminado exitosamente',
+    });
+  };
 
   // Abrir diálogos
   const openEditDialog = (category: any) => {
-    setSelectedCategory(category)
+    setSelectedCategory(category);
     setFormData({
       name: category.name,
       description: category.description,
-    })
-    setIsEditDialogOpen(true)
-  }
+    });
+    setIsEditDialogOpen(true);
+  };
 
   const openDeleteDialog = (category: any) => {
-    setSelectedCategory(category)
-    setIsDeleteDialogOpen(true)
-  }
+    setSelectedCategory(category);
+    setIsDeleteDialogOpen(true);
+  };
 
   const openViewDialog = (category: any) => {
-    setSelectedCategory(category)
-    setIsViewDialogOpen(true)
-  }
+    setSelectedCategory(category);
+    setIsViewDialogOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -137,23 +140,23 @@ export default function CategoriesPage() {
       <div className="flex items-center space-x-2 text-sm text-gray-500">
         <span>Admin</span>
         <span>/</span>
-        <span className="text-gray-900 font-medium">Categorías</span>
+        <span className="font-medium text-gray-900">Categorías</span>
       </div>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold">Gestión de Categorías</h1>
           <p className="text-gray-500">Administra las categorías de productos</p>
         </div>
         <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="mr-2 h-4 w-4" />
           Agregar Categoría
         </Button>
       </div>
 
       {/* Estadísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Categorías</CardTitle>
@@ -195,7 +198,7 @@ export default function CategoriesPage() {
         </CardHeader>
         <CardContent>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
             <Input
               placeholder="Buscar categorías..."
               value={searchTerm}
@@ -235,7 +238,10 @@ export default function CategoriesPage() {
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
+                        <Button
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                        >
                           <span className="sr-only">Abrir menú</span>
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
@@ -270,7 +276,10 @@ export default function CategoriesPage() {
       </Card>
 
       {/* Diálogo Agregar Categoría */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+      <Dialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+      >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Agregar Nueva Categoría</DialogTitle>
@@ -298,7 +307,10 @@ export default function CategoriesPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsAddDialogOpen(false)}
+            >
               Cancelar
             </Button>
             <Button onClick={handleCreateCategory}>Crear Categoría</Button>
@@ -307,7 +319,10 @@ export default function CategoriesPage() {
       </Dialog>
 
       {/* Diálogo Editar Categoría */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+      >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Editar Categoría</DialogTitle>
@@ -333,7 +348,10 @@ export default function CategoriesPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
               Cancelar
             </Button>
             <Button onClick={handleEditCategory}>Guardar Cambios</Button>
@@ -342,7 +360,10 @@ export default function CategoriesPage() {
       </Dialog>
 
       {/* Diálogo Ver Categoría */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+      <Dialog
+        open={isViewDialogOpen}
+        onOpenChange={setIsViewDialogOpen}
+      >
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle>Detalles de la Categoría</DialogTitle>
@@ -351,30 +372,33 @@ export default function CategoriesPage() {
             <div className="space-y-4">
               <div>
                 <Label className="text-sm font-medium">Nombre</Label>
-                <p className="text-sm mt-1">{selectedCategory.name}</p>
+                <p className="mt-1 text-sm">{selectedCategory.name}</p>
               </div>
               <div>
                 <Label className="text-sm font-medium">Descripción</Label>
-                <p className="text-sm text-gray-600 mt-1">{selectedCategory.description || "Sin descripción"}</p>
+                <p className="mt-1 text-sm text-gray-600">{selectedCategory.description || 'Sin descripción'}</p>
               </div>
               <div>
                 <Label className="text-sm font-medium">Productos</Label>
-                <p className="text-sm mt-1">{selectedCategory.productCount} productos</p>
+                <p className="mt-1 text-sm">{selectedCategory.productCount} productos</p>
               </div>
               <div>
                 <Label className="text-sm font-medium">Fecha de creación</Label>
-                <p className="text-sm mt-1">{selectedCategory.createdAt}</p>
+                <p className="mt-1 text-sm">{selectedCategory.createdAt}</p>
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsViewDialogOpen(false)}
+            >
               Cerrar
             </Button>
             <Button
               onClick={() => {
-                setIsViewDialogOpen(false)
-                if (selectedCategory) openEditDialog(selectedCategory)
+                setIsViewDialogOpen(false);
+                if (selectedCategory) openEditDialog(selectedCategory);
               }}
             >
               Editar Categoría
@@ -384,7 +408,10 @@ export default function CategoriesPage() {
       </Dialog>
 
       {/* Diálogo Eliminar Categoría */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <Dialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle>Eliminar Categoría</DialogTitle>
@@ -397,22 +424,29 @@ export default function CategoriesPage() {
               <p className="font-medium">{selectedCategory.name}</p>
               <p className="text-sm text-gray-500">{selectedCategory.description}</p>
               {selectedCategory.productCount > 0 && (
-                <p className="text-sm text-red-600 mt-2">
+                <p className="mt-2 text-sm text-red-600">
                   No se puede eliminar: tiene {selectedCategory.productCount} productos asociados
                 </p>
               )}
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
               Cancelar
             </Button>
-            <Button variant="destructive" onClick={handleDeleteCategory} disabled={selectedCategory?.productCount > 0}>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteCategory}
+              disabled={selectedCategory?.productCount > 0}
+            >
               Eliminar
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

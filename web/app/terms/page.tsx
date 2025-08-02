@@ -1,15 +1,15 @@
-import type { Metadata } from "next"
-import Link from "next/link"
-import { PageLayout } from "@/components/layout/PageLayout"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Info } from "lucide-react"
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { PageLayout } from '@/components/layout/PageLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: "Términos y Condiciones | CompuParts",
+  title: 'Términos y Condiciones | CompuParts',
   description:
-    "Términos y condiciones de uso de CompuParts. Información legal sobre compras, envíos, devoluciones y más.",
-}
+    'Términos y condiciones de uso de CompuParts. Información legal sobre compras, envíos, devoluciones y más.',
+};
 
 export default function TermsPage() {
   return (
@@ -31,46 +31,70 @@ export default function TermsPage() {
           </Alert>
 
           {/* Índice */}
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <h3 className="font-semibold mb-2">Índice de contenidos:</h3>
-            <ol className="list-decimal list-inside space-y-1 text-sm">
+          <div className="rounded-lg bg-gray-50 p-4">
+            <h3 className="mb-2 font-semibold">Índice de contenidos:</h3>
+            <ol className="list-inside list-decimal space-y-1 text-sm">
               <li>
-                <a href="#general" className="text-[#007BFF] hover:underline">
+                <a
+                  href="#general"
+                  className="text-[#007BFF] hover:underline"
+                >
                   Términos Generales
                 </a>
               </li>
               <li>
-                <a href="#products" className="text-[#007BFF] hover:underline">
+                <a
+                  href="#products"
+                  className="text-[#007BFF] hover:underline"
+                >
                   Productos y Precios
                 </a>
               </li>
               <li>
-                <a href="#payments" className="text-[#007BFF] hover:underline">
+                <a
+                  href="#payments"
+                  className="text-[#007BFF] hover:underline"
+                >
                   Pagos y Facturación
                 </a>
               </li>
               <li>
-                <a href="#shipping" className="text-[#007BFF] hover:underline">
+                <a
+                  href="#shipping"
+                  className="text-[#007BFF] hover:underline"
+                >
                   Envíos y Entregas
                 </a>
               </li>
               <li>
-                <a href="#returns" className="text-[#007BFF] hover:underline">
+                <a
+                  href="#returns"
+                  className="text-[#007BFF] hover:underline"
+                >
                   Devoluciones y Reembolsos
                 </a>
               </li>
               <li>
-                <a href="#warranty" className="text-[#007BFF] hover:underline">
+                <a
+                  href="#warranty"
+                  className="text-[#007BFF] hover:underline"
+                >
                   Garantías
                 </a>
               </li>
               <li>
-                <a href="#privacy" className="text-[#007BFF] hover:underline">
+                <a
+                  href="#privacy"
+                  className="text-[#007BFF] hover:underline"
+                >
                   Privacidad y Datos Personales
                 </a>
               </li>
               <li>
-                <a href="#liability" className="text-[#007BFF] hover:underline">
+                <a
+                  href="#liability"
+                  className="text-[#007BFF] hover:underline"
+                >
                   Limitación de Responsabilidad
                 </a>
               </li>
@@ -78,7 +102,10 @@ export default function TermsPage() {
           </div>
 
           {/* Términos Generales */}
-          <div id="general" className="space-y-3">
+          <div
+            id="general"
+            className="space-y-3"
+          >
             <h2 className="text-xl font-semibold">1. Términos Generales</h2>
             <p>
               Al acceder y utilizar el sitio web de CompuParts (en adelante, "el Sitio"), aceptas cumplir con estos
@@ -97,7 +124,10 @@ export default function TermsPage() {
           </div>
 
           {/* Productos y Precios */}
-          <div id="products" className="space-y-3">
+          <div
+            id="products"
+            className="space-y-3"
+          >
             <h2 className="text-xl font-semibold">2. Productos y Precios</h2>
             <p>
               CompuParts se esfuerza por mostrar con precisión los colores, características y especificaciones de los
@@ -116,7 +146,10 @@ export default function TermsPage() {
           </div>
 
           {/* Pagos y Facturación */}
-          <div id="payments" className="space-y-3">
+          <div
+            id="payments"
+            className="space-y-3"
+          >
             <h2 className="text-xl font-semibold">3. Pagos y Facturación</h2>
             <p>
               CompuParts acepta diversos métodos de pago, incluyendo tarjetas de crédito/débito, transferencias
@@ -134,7 +167,10 @@ export default function TermsPage() {
           </div>
 
           {/* Envíos y Entregas */}
-          <div id="shipping" className="space-y-3">
+          <div
+            id="shipping"
+            className="space-y-3"
+          >
             <h2 className="text-xl font-semibold">4. Envíos y Entregas</h2>
             <p>
               CompuParts realiza envíos a toda la República Mexicana. Los tiempos de entrega son estimados y pueden
@@ -152,7 +188,10 @@ export default function TermsPage() {
           </div>
 
           {/* Devoluciones y Reembolsos */}
-          <div id="returns" className="space-y-3">
+          <div
+            id="returns"
+            className="space-y-3"
+          >
             <h2 className="text-xl font-semibold">5. Devoluciones y Reembolsos</h2>
             <p>
               Puedes solicitar la devolución de un producto dentro de los 7 días naturales posteriores a la recepción
@@ -174,7 +213,10 @@ export default function TermsPage() {
           </div>
 
           {/* Garantías */}
-          <div id="warranty" className="space-y-3">
+          <div
+            id="warranty"
+            className="space-y-3"
+          >
             <h2 className="text-xl font-semibold">6. Garantías</h2>
             <p>
               Todos los productos vendidos por CompuParts cuentan con la garantía ofrecida por el fabricante, cuya
@@ -195,7 +237,10 @@ export default function TermsPage() {
           </div>
 
           {/* Privacidad y Datos Personales */}
-          <div id="privacy" className="space-y-3">
+          <div
+            id="privacy"
+            className="space-y-3"
+          >
             <h2 className="text-xl font-semibold">7. Privacidad y Datos Personales</h2>
             <p>
               CompuParts se compromete a proteger tu privacidad y tus datos personales de acuerdo con la Ley Federal de
@@ -203,16 +248,22 @@ export default function TermsPage() {
             </p>
             <p>
               Al utilizar nuestro Sitio y proporcionar tus datos personales, aceptas que CompuParts recopile, utilice y
-              divulgue tu información de acuerdo con nuestra{" "}
-              <Link href="/privacy" className="text-[#007BFF] hover:underline">
+              divulgue tu información de acuerdo con nuestra{' '}
+              <Link
+                href="/privacy"
+                className="text-[#007BFF] hover:underline"
+              >
                 Política de Privacidad
               </Link>
               .
             </p>
             <p>
               CompuParts utiliza cookies y tecnologías similares para mejorar tu experiencia en nuestro Sitio. Puedes
-              obtener más información sobre cómo utilizamos las cookies en nuestra{" "}
-              <Link href="/cookies" className="text-[#007BFF] hover:underline">
+              obtener más información sobre cómo utilizamos las cookies en nuestra{' '}
+              <Link
+                href="/cookies"
+                className="text-[#007BFF] hover:underline"
+              >
                 Política de Cookies
               </Link>
               .
@@ -220,7 +271,10 @@ export default function TermsPage() {
           </div>
 
           {/* Limitación de Responsabilidad */}
-          <div id="liability" className="space-y-3">
+          <div
+            id="liability"
+            className="space-y-3"
+          >
             <h2 className="text-xl font-semibold">8. Limitación de Responsabilidad</h2>
             <p>
               En ningún caso CompuParts, sus directores, empleados o agentes serán responsables por cualquier daño
@@ -240,12 +294,12 @@ export default function TermsPage() {
           </div>
 
           {/* Contacto */}
-          <div className="p-4 bg-gray-50 rounded-lg mt-8">
-            <h3 className="font-semibold mb-2">Contacto para asuntos legales:</h3>
+          <div className="mt-8 rounded-lg bg-gray-50 p-4">
+            <h3 className="mb-2 font-semibold">Contacto para asuntos legales:</h3>
             <p className="text-sm">
               Si tienes alguna pregunta sobre estos Términos y Condiciones, puedes contactarnos en:
             </p>
-            <p className="text-sm mt-2">
+            <p className="mt-2 text-sm">
               <strong>Correo electrónico:</strong> legal@compuparts.com
               <br />
               <strong>Teléfono:</strong> (55) 9876-5432
@@ -256,5 +310,5 @@ export default function TermsPage() {
         </CardContent>
       </Card>
     </PageLayout>
-  )
+  );
 }

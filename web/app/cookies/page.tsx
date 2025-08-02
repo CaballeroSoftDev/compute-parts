@@ -1,15 +1,15 @@
-import type { Metadata } from "next"
-import { PageLayout } from "@/components/layout/PageLayout"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Cookie, Info, Settings } from "lucide-react"
+import type { Metadata } from 'next';
+import { PageLayout } from '@/components/layout/PageLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Cookie, Info, Settings } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: "Política de Cookies | CompuParts",
-  description: "Información sobre cómo CompuParts utiliza cookies y tecnologías similares en su sitio web.",
-}
+  title: 'Política de Cookies | CompuParts',
+  description: 'Información sobre cómo CompuParts utiliza cookies y tecnologías similares en su sitio web.',
+};
 
 export default function CookiesPage() {
   return (
@@ -48,36 +48,36 @@ export default function CookiesPage() {
             <h2 className="text-xl font-semibold">Tipos de cookies que utilizamos</h2>
             <p>Utilizamos los siguientes tipos de cookies en nuestro sitio web:</p>
 
-            <div className="space-y-4 mt-4">
-              <div className="p-4 border rounded-lg">
+            <div className="mt-4 space-y-4">
+              <div className="rounded-lg border p-4">
                 <h3 className="font-semibold text-[#007BFF]">Cookies esenciales</h3>
-                <p className="text-sm mt-1">
+                <p className="mt-1 text-sm">
                   Estas cookies son necesarias para el funcionamiento básico de nuestro sitio web. Te permiten navegar
                   por el sitio y utilizar sus funciones, como acceder a áreas seguras. Sin estas cookies, no podríamos
                   proporcionar los servicios que has solicitado.
                 </p>
               </div>
 
-              <div className="p-4 border rounded-lg">
+              <div className="rounded-lg border p-4">
                 <h3 className="font-semibold text-[#007BFF]">Cookies de rendimiento y análisis</h3>
-                <p className="text-sm mt-1">
+                <p className="mt-1 text-sm">
                   Estas cookies nos ayudan a entender cómo los visitantes interactúan con nuestro sitio web, recopilando
                   información de forma anónima. Utilizamos esta información para mejorar el funcionamiento de nuestro
                   sitio y proporcionar una mejor experiencia de usuario.
                 </p>
               </div>
 
-              <div className="p-4 border rounded-lg">
+              <div className="rounded-lg border p-4">
                 <h3 className="font-semibold text-[#007BFF]">Cookies de funcionalidad</h3>
-                <p className="text-sm mt-1">
+                <p className="mt-1 text-sm">
                   Estas cookies permiten que nuestro sitio web recuerde las elecciones que haces (como tu nombre de
                   usuario, idioma o región) y proporcione funciones mejoradas y más personalizadas.
                 </p>
               </div>
 
-              <div className="p-4 border rounded-lg">
+              <div className="rounded-lg border p-4">
                 <h3 className="font-semibold text-[#007BFF]">Cookies de marketing</h3>
-                <p className="text-sm mt-1">
+                <p className="mt-1 text-sm">
                   Estas cookies se utilizan para rastrear a los visitantes en los sitios web. La intención es mostrar
                   anuncios relevantes y atractivos para el usuario individual, y por lo tanto, más valiosos para los
                   editores y anunciantes terceros.
@@ -162,7 +162,7 @@ export default function CookiesPage() {
               No tenemos control sobre estas cookies de terceros. Te recomendamos consultar las políticas de privacidad
               y cookies de estos terceros para obtener más información:
             </p>
-            <ul className="list-disc list-inside space-y-1 pl-4">
+            <ul className="list-inside list-disc space-y-1 pl-4">
               <li>
                 <a
                   href="https://policies.google.com/privacy"
@@ -196,7 +196,7 @@ export default function CookiesPage() {
               A continuación, te proporcionamos enlaces sobre cómo gestionar las cookies en los navegadores más
               populares:
             </p>
-            <ul className="list-disc list-inside space-y-1 pl-4">
+            <ul className="list-inside list-disc space-y-1 pl-4">
               <li>
                 <a
                   href="https://support.google.com/chrome/answer/95647"
@@ -250,7 +250,7 @@ export default function CookiesPage() {
               Puedes ajustar tus preferencias de cookies en cualquier momento utilizando nuestro centro de preferencias
               de cookies.
             </p>
-            <div className="flex justify-center mt-4">
+            <div className="mt-4 flex justify-center">
               <Button className="bg-[#007BFF] hover:bg-blue-600">
                 <Settings className="mr-2 h-4 w-4" /> Configurar preferencias de cookies
               </Button>
@@ -276,5 +276,5 @@ export default function CookiesPage() {
         </CardContent>
       </Card>
     </PageLayout>
-  )
+  );
 }
