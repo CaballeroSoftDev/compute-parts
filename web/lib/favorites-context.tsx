@@ -8,8 +8,8 @@ interface FavoritesContextType {
   favorites: Product[];
   favoritesCount: number;
   addToFavorites: (product: Product) => void;
-  removeFromFavorites: (productId: string) => void;
-  isFavorite: (productId: string) => boolean;
+  removeFromFavorites: (productId: number) => void;
+  isFavorite: (productId: number) => boolean;
   clearFavorites: () => void;
 }
 
@@ -45,11 +45,11 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const removeFromFavorites = (productId: string) => {
+  const removeFromFavorites = (productId: number) => {
     setFavorites((prev) => prev.filter((fav) => fav.id !== productId));
   };
 
-  const isFavorite = (productId: string) => {
+  const isFavorite = (productId: number) => {
     return favorites.some((fav) => fav.id === productId);
   };
 

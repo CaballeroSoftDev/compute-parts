@@ -2,19 +2,17 @@
 
 import type React from 'react';
 import { useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Slider } from '@/components/ui/slider';
-import { Heart, SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useFavorites } from '@/lib/favorites-context';
+import type { CatalogProduct, CatalogFilters } from '@/lib/interfaces/catalog';
+import { ProductFilters } from '@/components/catalog/ProductFilters';
+import { ProductCard } from '@/components/catalog/ProductCard';
 
 // Datos de ejemplo
-const products = [
+const products: CatalogProduct[] = [
   {
     id: 1,
     name: 'Procesador Intel Core i7-12700K',
@@ -95,53 +93,69 @@ const categories = [
 const brands = ['Intel', 'NVIDIA', 'Corsair', 'Samsung', 'ASUS', 'EVGA', 'NZXT', 'LG'];
 
 export default function CatalogPage() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [priceRange, setPriceRange] = useState([0, 20000]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [filters, setFilters] = useState<CatalogFilters>({
+    searchTerm: '',
+    priceRange: [0, 20000],
+    selectedCategories: [],
+    selectedBrands: [],
+  });
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
 
   // Filtrar productos
   const filteredProducts = products.filter((product) => {
     const matchesSearch =
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchTerm.toLowerCase());
+      product.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+      product.brand.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+      product.category.toLowerCase().includes(filters.searchTerm.toLowerCase());
 
-    const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
-    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(product.category);
-    const matchesBrand = selectedBrands.length === 0 || selectedBrands.includes(product.brand);
+    const matchesPrice = product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1];
+    const matchesCategory =
+      filters.selectedCategories.length === 0 || filters.selectedCategories.includes(product.category);
+    const matchesBrand = filters.selectedBrands.length === 0 || filters.selectedBrands.includes(product.brand);
 
     return matchesSearch && matchesPrice && matchesCategory && matchesBrand;
   });
 
-  const toggleCategory = (category: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
-    );
+  // Función para convertir CatalogProduct a Product
+  const convertToProduct = (catalogProduct: CatalogProduct) => {
+    return {
+      id: catalogProduct.id,
+      name: catalogProduct.name,
+      description: `${catalogProduct.brand} - ${catalogProduct.category}`,
+      category: catalogProduct.category,
+      brand: catalogProduct.brand,
+      price: catalogProduct.price,
+      stock: 10, // Valor por defecto
+      status: 'Activo' as const,
+      image: catalogProduct.image,
+      featured: false, // Valor por defecto
+      createdAt: new Date().toISOString(), // Valor por defecto
+    };
   };
 
-  const toggleBrand = (brand: string) => {
-    setSelectedBrands((prev) => (prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]));
-  };
-
-  const handleFavoriteClick = (product: (typeof products)[0], e: React.MouseEvent) => {
+  const handleFavoriteClick = (product: CatalogProduct, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
     if (isFavorite(product.id)) {
       removeFromFavorites(product.id);
     } else {
-      addToFavorites({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        brand: product.brand,
-        category: product.category,
-        image: product.image,
-      });
+      addToFavorites(convertToProduct(product));
     }
+  };
+
+  const handleFiltersChange = (newFilters: CatalogFilters) => {
+    setFilters(newFilters);
+  };
+
+  const clearAllFilters = () => {
+    setFilters({
+      searchTerm: '',
+      priceRange: [0, 20000],
+      selectedCategories: [],
+      selectedBrands: [],
+    });
   };
 
   return (
@@ -154,8 +168,8 @@ export default function CatalogPage() {
               <Input
                 placeholder="Buscar productos..."
                 className="pl-4"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={filters.searchTerm}
+                onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })}
               />
             </div>
             <Button
@@ -170,194 +184,15 @@ export default function CatalogPage() {
         </div>
 
         <div className="flex flex-col gap-6 md:flex-row">
-          {/* Filtros para escritorio */}
-          <div className="hidden w-64 shrink-0 md:block">
-            <div className="sticky top-24 space-y-6">
-              <div>
-                <h3 className="mb-3 font-medium">Rango de Precio</h3>
-                <div className="px-2">
-                  <Slider
-                    defaultValue={[0, 20000]}
-                    max={20000}
-                    step={100}
-                    value={priceRange}
-                    onValueChange={setPriceRange}
-                    className="mb-6"
-                  />
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">MX${priceRange[0].toLocaleString()}</span>
-                    <span className="text-sm">MX${priceRange[1].toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="mb-3 font-medium">Categorías</h3>
-                <div className="space-y-2">
-                  {categories.map((category) => (
-                    <div
-                      key={category}
-                      className="flex items-center space-x-2"
-                    >
-                      <Checkbox
-                        id={`category-${category}`}
-                        checked={selectedCategories.includes(category)}
-                        onCheckedChange={() => toggleCategory(category)}
-                      />
-                      <Label
-                        htmlFor={`category-${category}`}
-                        className="text-sm"
-                      >
-                        {category}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="mb-3 font-medium">Marcas</h3>
-                <div className="space-y-2">
-                  {brands.map((brand) => (
-                    <div
-                      key={brand}
-                      className="flex items-center space-x-2"
-                    >
-                      <Checkbox
-                        id={`brand-${brand}`}
-                        checked={selectedBrands.includes(brand)}
-                        onCheckedChange={() => toggleBrand(brand)}
-                      />
-                      <Label
-                        htmlFor={`brand-${brand}`}
-                        className="text-sm"
-                      >
-                        {brand}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <Button
-                variant="outline"
-                className="w-full bg-transparent"
-                onClick={() => {
-                  setSelectedCategories([]);
-                  setSelectedBrands([]);
-                  setPriceRange([0, 20000]);
-                  setSearchTerm('');
-                }}
-              >
-                Limpiar Filtros
-              </Button>
-            </div>
-          </div>
-
-          {/* Filtros móviles */}
-          {showMobileFilters && (
-            <div className="fixed inset-0 z-50 overflow-y-auto bg-white p-6 md:hidden">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-bold">Filtros</h2>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowMobileFilters(false)}
-                >
-                  <X className="h-6 w-6" />
-                </Button>
-              </div>
-
-              <div className="space-y-6">
-                <div>
-                  <h3 className="mb-3 font-medium">Rango de Precio</h3>
-                  <div className="px-2">
-                    <Slider
-                      defaultValue={[0, 20000]}
-                      max={20000}
-                      step={100}
-                      value={priceRange}
-                      onValueChange={setPriceRange}
-                      className="mb-6"
-                    />
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">MX${priceRange[0].toLocaleString()}</span>
-                      <span className="text-sm">MX${priceRange[1].toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="mb-3 font-medium">Categorías</h3>
-                  <div className="space-y-2">
-                    {categories.map((category) => (
-                      <div
-                        key={category}
-                        className="flex items-center space-x-2"
-                      >
-                        <Checkbox
-                          id={`mobile-category-${category}`}
-                          checked={selectedCategories.includes(category)}
-                          onCheckedChange={() => toggleCategory(category)}
-                        />
-                        <Label
-                          htmlFor={`mobile-category-${category}`}
-                          className="text-sm"
-                        >
-                          {category}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="mb-3 font-medium">Marcas</h3>
-                  <div className="space-y-2">
-                    {brands.map((brand) => (
-                      <div
-                        key={brand}
-                        className="flex items-center space-x-2"
-                      >
-                        <Checkbox
-                          id={`mobile-brand-${brand}`}
-                          checked={selectedBrands.includes(brand)}
-                          onCheckedChange={() => toggleBrand(brand)}
-                        />
-                        <Label
-                          htmlFor={`mobile-brand-${brand}`}
-                          className="text-sm"
-                        >
-                          {brand}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex gap-4 pt-4">
-                  <Button
-                    variant="outline"
-                    className="flex-1 bg-transparent"
-                    onClick={() => {
-                      setSelectedCategories([]);
-                      setSelectedBrands([]);
-                      setPriceRange([0, 20000]);
-                      setSearchTerm('');
-                    }}
-                  >
-                    Limpiar
-                  </Button>
-                  <Button
-                    className="flex-1 bg-[#007BFF] hover:bg-[#0056b3]"
-                    onClick={() => setShowMobileFilters(false)}
-                  >
-                    Aplicar
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Filtros */}
+          <ProductFilters
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            categories={categories}
+            brands={brands}
+            showMobileFilters={showMobileFilters}
+            onCloseMobileFilters={() => setShowMobileFilters(false)}
+          />
 
           {/* Lista de productos */}
           <div className="flex-1">
@@ -367,12 +202,7 @@ export default function CatalogPage() {
                 <p className="mb-4 text-gray-500">Intenta con otros filtros o términos de búsqueda</p>
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    setSelectedCategories([]);
-                    setSelectedBrands([]);
-                    setPriceRange([0, 20000]);
-                    setSearchTerm('');
-                  }}
+                  onClick={clearAllFilters}
                 >
                   Limpiar Filtros
                 </Button>
@@ -380,44 +210,12 @@ export default function CatalogPage() {
             ) : (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {filteredProducts.map((product) => (
-                  <div
+                  <ProductCard
                     key={product.id}
-                    className="group relative overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md"
-                  >
-                    <Link
-                      href={`/product/${product.id}`}
-                      className="absolute inset-0 z-10"
-                    >
-                      <span className="sr-only">Ver producto</span>
-                    </Link>
-                    <div className="relative aspect-square overflow-hidden">
-                      <Image
-                        src={product.image || '/placeholder.svg'}
-                        alt={product.name}
-                        fill
-                        className="object-cover transition-transform group-hover:scale-105"
-                      />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className={`absolute right-2 top-2 z-20 rounded-full bg-white/80 backdrop-blur-sm ${
-                          isFavorite(product.id)
-                            ? 'text-red-500 hover:text-red-700'
-                            : 'text-gray-400 hover:text-red-500'
-                        }`}
-                        onClick={(e) => handleFavoriteClick(product, e)}
-                        aria-label={isFavorite(product.id) ? 'Eliminar de favoritos' : 'Añadir a favoritos'}
-                      >
-                        <Heart className={`h-4 w-4 ${isFavorite(product.id) ? 'fill-current' : ''}`} />
-                      </Button>
-                    </div>
-                    <div className="p-4">
-                      <p className="mb-1 text-xs text-gray-500">{product.category}</p>
-                      <h3 className="line-clamp-2 text-sm font-medium text-black">{product.name}</h3>
-                      <p className="mt-1 text-xs text-gray-500">{product.brand}</p>
-                      <p className="mt-2 font-bold text-black">MX${product.price.toLocaleString()}</p>
-                    </div>
-                  </div>
+                    product={product}
+                    isFavorite={isFavorite(product.id)}
+                    onFavoriteClick={handleFavoriteClick}
+                  />
                 ))}
               </div>
             )}

@@ -117,14 +117,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         })}
       </nav>
 
-      <div className="space-y-4 px-3 pb-4">
+      <div className="space-y-4 pb-4">
         <hr className="border-gray-200" />
 
         <Button
           onClick={() => (window.location.href = '/')}
           variant="ghost"
           className={cn(
-            'group flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-[#007BFF]',
+            'group flex w-full items-center rounded-none px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-[#007BFF]',
             !isExpanded && !isMobile && 'justify-center'
           )}
         >
@@ -144,7 +144,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           }}
           variant="ghost"
           className={cn(
-            'group flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600',
+            'group flex w-full items-center rounded-none px-3 py-2 text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600',
             !isExpanded && !isMobile && 'justify-center'
           )}
         >
@@ -163,7 +163,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             onClick={toggleSidebar}
             variant="ghost"
             className={cn(
-              'group flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-400 hover:bg-gray-50 hover:text-gray-600',
+              'group flex w-full items-center rounded-none px-3 py-2 text-sm font-medium text-gray-400 hover:bg-gray-50 hover:text-gray-600',
               !isExpanded && 'justify-center'
             )}
           >
