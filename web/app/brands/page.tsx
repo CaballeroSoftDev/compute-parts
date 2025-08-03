@@ -36,11 +36,9 @@ export default function BrandsPage() {
 
         setBrands(allBrands);
         setFeaturedBrands(featured);
-        
+
         // Obtener las 10 marcas principales (con más productos)
-        const topBrands = allBrands
-          .sort((a, b) => b.product_count - a.product_count)
-          .slice(0, 10);
+        const topBrands = allBrands.sort((a, b) => b.product_count - a.product_count).slice(0, 10);
         setTopBrands(topBrands);
       } catch (err) {
         console.error('Error loading brands:', err);
@@ -209,7 +207,7 @@ export default function BrandsPage() {
         {/* Principales marcas con búsqueda integrada */}
         <div className="mb-12">
           <h2 className="mb-6 text-2xl font-bold">Principales Marcas</h2>
-          
+
           {/* Barra de búsqueda (solo visible cuando se activa) */}
           {showSearch && (
             <div className="mb-6">
@@ -230,60 +228,65 @@ export default function BrandsPage() {
           {/* Contenido de marcas */}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {/* Mostrar marcas principales cuando no hay búsqueda activa */}
-            {!showSearch && !searchTerm && topBrands.map((brand, index) => (
-              <Link
-                key={brand.id}
-                href={getCatalogUrlWithBrandFilter(brand.name)}
-                className="group flex flex-col items-center rounded-lg border p-4 transition-all hover:border-[#007BFF] hover:shadow-md"
-              >
-                <div className="relative mb-3 h-12 w-full">
-                  <Image
-                    src={BrandsService.getValidImageUrl(brand.logo_url || null)}
-                    alt={`Logo de ${brand.name}`}
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-                <span className="text-sm font-medium group-hover:text-[#007BFF]">{brand.name}</span>
-                <span className="text-xs text-gray-500">
-                  {brand.product_count} producto{brand.product_count !== 1 ? 's' : ''}
-                </span>
-              </Link>
-            ))}
+            {!showSearch &&
+              !searchTerm &&
+              topBrands.map((brand, index) => (
+                <Link
+                  key={brand.id}
+                  href={getCatalogUrlWithBrandFilter(brand.name)}
+                  className="group flex flex-col items-center rounded-lg border p-4 transition-all hover:border-[#007BFF] hover:shadow-md"
+                >
+                  <div className="relative mb-3 h-12 w-full">
+                    <Image
+                      src={BrandsService.getValidImageUrl(brand.logo_url || null)}
+                      alt={`Logo de ${brand.name}`}
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                  <span className="text-sm font-medium group-hover:text-[#007BFF]">{brand.name}</span>
+                  <span className="text-xs text-gray-500">
+                    {brand.product_count} producto{brand.product_count !== 1 ? 's' : ''}
+                  </span>
+                </Link>
+              ))}
 
             {/* Mostrar mensaje de búsqueda en la última posición cuando no hay búsqueda activa */}
             {!showSearch && !searchTerm && (
-              <div 
-                className="group flex flex-col items-center rounded-lg border-2 border-dashed border-gray-300 p-4 transition-all hover:border-[#007BFF] hover:shadow-md cursor-pointer"
+              <div
+                className="group flex cursor-pointer flex-col items-center rounded-lg border-2 border-dashed border-gray-300 p-4 transition-all hover:border-[#007BFF] hover:shadow-md"
                 onClick={() => setShowSearch(true)}
               >
                 <Search className="mb-3 h-8 w-8 text-gray-400 group-hover:text-[#007BFF]" />
-                <span className="text-sm font-medium text-gray-600 group-hover:text-[#007BFF]">¿No encontraste tu marca?</span>
-                <span className="text-xs text-gray-500 text-center">Haz clic para buscar</span>
+                <span className="text-sm font-medium text-gray-600 group-hover:text-[#007BFF]">
+                  ¿No encontraste tu marca?
+                </span>
+                <span className="text-center text-xs text-gray-500">Haz clic para buscar</span>
               </div>
             )}
 
             {/* Mostrar resultados de búsqueda */}
-            {searchTerm && searchResults.map((brand) => (
-              <Link
-                key={brand.id}
-                href={getCatalogUrlWithBrandFilter(brand.name)}
-                className="group flex flex-col items-center rounded-lg border p-4 transition-all hover:border-[#007BFF] hover:shadow-md"
-              >
-                <div className="relative mb-3 h-12 w-full">
-                  <Image
-                    src={BrandsService.getValidImageUrl(brand.logo_url || null)}
-                    alt={`Logo de ${brand.name}`}
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-                <span className="text-sm font-medium group-hover:text-[#007BFF]">{brand.name}</span>
-                <span className="text-xs text-gray-500">
-                  {brand.product_count} producto{brand.product_count !== 1 ? 's' : ''}
-                </span>
-              </Link>
-            ))}
+            {searchTerm &&
+              searchResults.map((brand) => (
+                <Link
+                  key={brand.id}
+                  href={getCatalogUrlWithBrandFilter(brand.name)}
+                  className="group flex flex-col items-center rounded-lg border p-4 transition-all hover:border-[#007BFF] hover:shadow-md"
+                >
+                  <div className="relative mb-3 h-12 w-full">
+                    <Image
+                      src={BrandsService.getValidImageUrl(brand.logo_url || null)}
+                      alt={`Logo de ${brand.name}`}
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                  <span className="text-sm font-medium group-hover:text-[#007BFF]">{brand.name}</span>
+                  <span className="text-xs text-gray-500">
+                    {brand.product_count} producto{brand.product_count !== 1 ? 's' : ''}
+                  </span>
+                </Link>
+              ))}
 
             {/* Mostrar loading durante búsqueda */}
             {isSearching && (
@@ -301,8 +304,8 @@ export default function BrandsPage() {
                 <div className="text-center">
                   <p className="mb-2 text-lg font-semibold text-gray-700">No se encontraron marcas</p>
                   <p className="text-gray-500">Intenta con otro término de búsqueda</p>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="mt-4"
                     onClick={() => {
                       setSearchTerm('');
@@ -317,9 +320,9 @@ export default function BrandsPage() {
 
             {/* Mostrar botón para volver cuando hay resultados */}
             {searchTerm && !isSearching && searchResults.length > 0 && (
-              <div className="col-span-full flex justify-center mt-4">
-                <Button 
-                  variant="outline" 
+              <div className="col-span-full mt-4 flex justify-center">
+                <Button
+                  variant="outline"
                   onClick={() => {
                     setSearchTerm('');
                     setShowSearch(false);

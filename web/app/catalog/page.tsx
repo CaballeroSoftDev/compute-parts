@@ -21,7 +21,7 @@ function CatalogContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  
+
   const { filters, updateFilters, clearFilters } = useCatalogFilters();
   const { favorites, addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
   const { toast } = useToast();

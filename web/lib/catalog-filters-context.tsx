@@ -17,7 +17,7 @@ const CatalogFiltersContext = createContext<CatalogFiltersContextType | undefine
 export function CatalogFiltersProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   const [filters, setFilters] = useState<CatalogFilters>({
     searchTerm: '',
     priceRange: [0, 20000],
@@ -36,10 +36,7 @@ export function CatalogFiltersProvider({ children }: { children: React.ReactNode
 
     const newFilters: CatalogFilters = {
       searchTerm,
-      priceRange: [
-        minPrice ? parseInt(minPrice) : 0,
-        maxPrice ? parseInt(maxPrice) : 20000,
-      ],
+      priceRange: [minPrice ? parseInt(minPrice) : 0, maxPrice ? parseInt(maxPrice) : 20000],
       selectedCategories: categories.filter(Boolean),
       selectedBrands: brands.filter(Boolean),
     };
@@ -50,7 +47,7 @@ export function CatalogFiltersProvider({ children }: { children: React.ReactNode
   const updateFilters = (updates: Partial<CatalogFilters>) => {
     const newFilters = { ...filters, ...updates };
     setFilters(newFilters);
-    
+
     // Actualizar URL params
     const params = new URLSearchParams();
     if (newFilters.searchTerm) params.set('search', newFilters.searchTerm);
@@ -58,7 +55,7 @@ export function CatalogFiltersProvider({ children }: { children: React.ReactNode
     if (newFilters.selectedBrands.length > 0) params.set('brands', newFilters.selectedBrands.join(','));
     if (newFilters.priceRange[0] > 0) params.set('minPrice', newFilters.priceRange[0].toString());
     if (newFilters.priceRange[1] < 20000) params.set('maxPrice', newFilters.priceRange[1].toString());
-    
+
     const queryString = params.toString();
     const newUrl = queryString ? `/catalog?${queryString}` : '/catalog';
     router.replace(newUrl, { scroll: false });
@@ -83,7 +80,7 @@ export function CatalogFiltersProvider({ children }: { children: React.ReactNode
       selectedBrands: [brandName],
     };
     setFilters(newFilters);
-    
+
     // Actualizar URL con el filtro de marca
     const params = new URLSearchParams();
     params.set('brands', brandName);
@@ -111,4 +108,4 @@ export function useCatalogFilters() {
     throw new Error('useCatalogFilters must be used within a CatalogFiltersProvider');
   }
   return context;
-} 
+}
