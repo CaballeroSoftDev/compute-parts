@@ -1,5 +1,5 @@
 export interface CatalogProduct {
-  id: number;
+  id: string;
   name: string;
   price: number;
   brand: string;

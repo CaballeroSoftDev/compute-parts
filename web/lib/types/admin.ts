@@ -181,6 +181,8 @@ export interface ProductImageForm {
 	alt_text?: string;
 	is_primary?: boolean;
 	sort_order?: number;
+	file?: File; // Archivo para subida diferida
+	isNew?: boolean; // Indica si es una imagen nueva
 }
 
 export interface UpdateProductForm extends Partial<CreateProductForm> {

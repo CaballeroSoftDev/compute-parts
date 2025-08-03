@@ -23,12 +23,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, MoreHorizontal, Edit, Trash2, Eye, Package, AlertTriangle, Loader2, RefreshCw, TrendingUp, TrendingDown } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Edit, Trash2, Eye, Package, AlertTriangle, Loader2, RefreshCw, TrendingUp, TrendingDown, CheckCircle, XCircle, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminProducts } from '@/lib/hooks/use-admin-products';
 import { useAdminCategories } from '@/lib/hooks/use-admin-categories';
 import { useAdminBrands } from '@/lib/hooks/use-admin-brands';
 import { ProductForm } from '@/components/admin/products/ProductForm';
+import { AdminService } from '@/lib/services/admin-service';
 import type { AdminProduct, AdminFilters } from '@/lib/types/admin';
 import { Label } from '@/components/ui/label';
 
@@ -152,6 +153,7 @@ export default function ProductsPage() {
       toast({
         title: 'Producto creado',
         description: 'El producto se ha creado exitosamente',
+        variant: 'success',
       });
     } catch (error) {
       toast({
@@ -175,6 +177,7 @@ export default function ProductsPage() {
       toast({
         title: 'Producto actualizado',
         description: 'El producto se ha actualizado exitosamente',
+        variant: 'success',
       });
     } catch (error) {
       toast({
@@ -197,6 +200,7 @@ export default function ProductsPage() {
       toast({
         title: 'Producto eliminado',
         description: 'El producto se ha eliminado exitosamente',
+        variant: 'success',
       });
     } catch (error) {
       toast({
@@ -219,6 +223,7 @@ export default function ProductsPage() {
       toast({
         title: 'Stock actualizado',
         description: 'El stock del producto se ha actualizado exitosamente',
+        variant: 'success',
       });
     } catch (error) {
       toast({
@@ -232,9 +237,31 @@ export default function ProductsPage() {
   };
 
   // Abrir diálogos
-  const openEditDialog = (product: AdminProduct) => {
-    setSelectedProduct(product);
-    setIsEditDialogOpen(true);
+  const openEditDialog = async (product: AdminProduct) => {
+    clearError(); // Limpiar errores previos
+    
+    try {
+      // Obtener el producto completo con imágenes y relaciones
+      const completeProduct = await AdminService.getProduct(product.id);
+      
+      if (completeProduct) {
+        setSelectedProduct(completeProduct);
+        setIsEditDialogOpen(true);
+      } else {
+        toast({
+          title: 'Error',
+          description: 'No se pudo cargar la información del producto',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error loading product for edit:', error);
+      toast({
+        title: 'Error',
+        description: 'Error al cargar el producto para edición',
+        variant: 'destructive',
+      });
+    }
   };
 
   const openDeleteDialog = (product: AdminProduct) => {
@@ -279,11 +306,13 @@ export default function ProductsPage() {
   };
 
   const handleRefresh = async () => {
+    clearError(); // Limpiar errores previos
     try {
       await refreshProducts();
       toast({
         title: 'Datos actualizados',
         description: 'La lista de productos se ha actualizado',
+        variant: 'info',
       });
     } catch (error) {
       toast({
@@ -294,26 +323,42 @@ export default function ProductsPage() {
     }
   };
 
-  if (error) {
+  if (error && !loading) {
     return (
       <div className="flex h-64 items-center justify-center">
         <div className="text-center">
           <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-red-500" />
           <h3 className="text-lg font-semibold text-gray-900">Error al cargar productos</h3>
           <p className="text-gray-500">{error}</p>
-          <div className="mt-4 space-x-2">
-            <Button
-              onClick={handleRefresh}
-              className="mr-2"
-            >
-              Reintentar
-            </Button>
-            <Button
-              variant="outline"
-              onClick={clearError}
-            >
-              Limpiar Error
-            </Button>
+          <div className="mt-6 space-y-4">
+            <p className="text-sm text-gray-600">
+              Ha ocurrido un error al cargar los productos. Esto puede deberse a problemas de conexión o del servidor.
+            </p>
+            <div className="flex justify-center space-x-4">
+              <Button
+                onClick={handleRefresh}
+                className="flex items-center space-x-2"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Reintentando...</span>
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    <span>Reintentar</span>
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => window.location.reload()}
+              >
+                Recargar página
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -342,7 +387,7 @@ export default function ProductsPage() {
             disabled={loading}
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            Actualizar
+            {loading ? 'Actualizando...' : 'Actualizar'}
           </Button>
           <Button onClick={() => setIsAddDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
@@ -398,69 +443,87 @@ export default function ProductsPage() {
           <CardDescription>Busca y filtra productos</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col gap-4 sm:flex-row">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
-              <Input
-                placeholder="Buscar productos..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select
-              value={categoryFilter}
-              onValueChange={setCategoryFilter}
-            >
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Filtrar por categoría" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas las categorías</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem
-                    key={category.id}
-                    value={category.id}
-                  >
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={statusFilter}
-              onValueChange={setStatusFilter}
-            >
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="active">Activo</SelectItem>
-                <SelectItem value="inactive">Inactivo</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={stockFilter}
-              onValueChange={setStockFilter}
-            >
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Stock" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todo el stock</SelectItem>
-                <SelectItem value="low">Stock bajo</SelectItem>
-                <SelectItem value="out">Agotados</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button onClick={applyFilters}>Aplicar Filtros</Button>
-            <Button
-              variant="outline"
-              onClick={clearFilters}
-            >
-              Limpiar
-            </Button>
-          </div>
+                     <div className="space-y-4">
+             {/* Barra de búsqueda - Siempre arriba en móvil, en línea en desktop */}
+             <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+               <div className="relative w-full lg:flex-1">
+                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+                 <Input
+                   placeholder="Buscar productos..."
+                   value={searchTerm}
+                   onChange={(e) => setSearchTerm(e.target.value)}
+                   className="pl-10 w-full"
+                 />
+               </div>
+               
+               {/* Filtros - Abajo en móvil, en línea en desktop */}
+               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:flex-nowrap lg:gap-3">
+                 <Select
+                   value={categoryFilter}
+                   onValueChange={setCategoryFilter}
+                 >
+                   <SelectTrigger className="w-full sm:w-[200px]">
+                     <SelectValue placeholder="Todas las categorías" />
+                   </SelectTrigger>
+                   <SelectContent>
+                     <SelectItem value="all">Todas las categorías</SelectItem>
+                     {categories.map((category) => (
+                       <SelectItem
+                         key={category.id}
+                         value={category.id}
+                       >
+                         {category.name}
+                       </SelectItem>
+                     ))}
+                   </SelectContent>
+                 </Select>
+                 
+                 <Select
+                   value={statusFilter}
+                   onValueChange={setStatusFilter}
+                 >
+                   <SelectTrigger className="w-full sm:w-[150px]">
+                     <SelectValue placeholder="Todos" />
+                   </SelectTrigger>
+                   <SelectContent>
+                     <SelectItem value="all">Todos</SelectItem>
+                     <SelectItem value="active">Activo</SelectItem>
+                     <SelectItem value="inactive">Inactivo</SelectItem>
+                   </SelectContent>
+                 </Select>
+                 
+                 <Select
+                   value={stockFilter}
+                   onValueChange={setStockFilter}
+                 >
+                   <SelectTrigger className="w-full sm:w-[150px]">
+                     <SelectValue placeholder="Todo el stock" />
+                   </SelectTrigger>
+                   <SelectContent>
+                     <SelectItem value="all">Todo el stock</SelectItem>
+                     <SelectItem value="low">Stock bajo</SelectItem>
+                     <SelectItem value="out">Agotados</SelectItem>
+                   </SelectContent>
+                 </Select>
+                 
+                 <div className="flex gap-2 w-full sm:w-auto">
+                   <Button 
+                     onClick={applyFilters}
+                     className="flex-1 sm:flex-none"
+                   >
+                     Aplicar Filtros
+                   </Button>
+                   <Button
+                     variant="outline"
+                     onClick={clearFilters}
+                     className="flex-1 sm:flex-none"
+                   >
+                     Limpiar
+                   </Button>
+                 </div>
+               </div>
+             </div>
+           </div>
         </CardContent>
       </Card>
 
@@ -472,7 +535,7 @@ export default function ProductsPage() {
             {loading ? (
               <div className="flex items-center space-x-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Cargando productos...</span>
+                <span>{products.length > 0 ? 'Actualizando datos...' : 'Cargando productos...'}</span>
               </div>
             ) : (
               `${products.length} productos encontrados`
@@ -543,21 +606,30 @@ export default function ProductsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => openViewDialog(product)}>
+                          <DropdownMenuItem 
+                            className="cursor-pointer"
+                            onClick={() => openViewDialog(product)}
+                          >
                             <Eye className="mr-2 h-4 w-4" />
                             Ver detalles
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => openEditDialog(product)}>
+                          <DropdownMenuItem 
+                            className="cursor-pointer"
+                            onClick={() => openEditDialog(product)}
+                          >
                             <Edit className="mr-2 h-4 w-4" />
                             Editar
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => openStockDialog(product)}>
+                          <DropdownMenuItem 
+                            className="cursor-pointer"
+                            onClick={() => openStockDialog(product)}
+                          >
                             <Package className="mr-2 h-4 w-4" />
                             Actualizar stock
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
-                            className="text-red-600"
+                            className="text-red-600 cursor-pointer"
                             onClick={() => openDeleteDialog(product)}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />

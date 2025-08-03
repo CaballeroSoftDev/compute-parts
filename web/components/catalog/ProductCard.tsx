@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Heart } from 'lucide-react';
 import type { CatalogProduct } from '@/lib/interfaces/catalog';
+import { ImageHelper } from '@/lib/utils/image-helper';
 
 interface ProductCardProps {
   product: CatalogProduct;
@@ -23,7 +24,7 @@ export function ProductCard({ product, isFavorite, onFavoriteClick }: ProductCar
       </Link>
       <div className="relative aspect-square overflow-hidden">
         <Image
-          src={product.image || '/placeholder.svg'}
+          src={ImageHelper.getValidImageUrl(product.image)}
           alt={product.name}
           fill
           className="object-cover transition-transform group-hover:scale-105"

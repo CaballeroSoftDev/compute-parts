@@ -325,86 +325,84 @@ export function MultipleImageUpload({
 
 			{/* Grid de imágenes */}
 			{images.length > 0 && (
-				<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+				<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
 					{images.map((image, index) => (
-						<Card key={image.id} className="relative group overflow-hidden">
-							{/* Imagen */}
-							<div className="relative">
-								<img
-									src={image.url}
-									alt={image.alt_text || 'Producto'}
-									className={cn(
-										'w-full h-auto object-cover rounded-t-lg',
-										getPreviewSize()
-									)}
-								/>
-
-								{/* Overlay con acciones */}
-								<div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-									<Button
-										size="sm"
-										variant="secondary"
-										onClick={() => setPrimaryImage(image.id!)}
-										className="h-8 w-8 p-0"
-									>
-										{image.is_primary ? (
-											<Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-										) : (
-											<StarOff className="w-4 h-4" />
-										)}
-									</Button>
-
-									<Button
-										size="sm"
-										variant="destructive"
-										onClick={() => removeImage(image.id!)}
-										className="h-8 w-8 p-0"
-									>
-										<Trash2 className="w-4 h-4" />
-									</Button>
-								</div>
-
-								{/* Badge de imagen principal */}
-								{image.is_primary && (
-									<Badge className="absolute top-2 left-2 bg-yellow-500 text-white">
-										Principal
-									</Badge>
-								)}
-
-								{/* Badge de imagen nueva */}
-								{image.isNew && (
-									<Badge className="absolute top-2 right-2 bg-blue-500 text-white">
-										Nueva
-									</Badge>
-								)}
-							</div>
-
-							{/* Controles de orden */}
-							<div className="p-2 flex items-center justify-between">
-								<div className="flex gap-1">
-									<Button
-										size="sm"
-										variant="ghost"
-										onClick={() => moveImageUp(index)}
-										disabled={index === 0}
-										className="h-6 w-6 p-0"
-									>
-										↑
-									</Button>
-									<Button
-										size="sm"
-										variant="ghost"
-										onClick={() => moveImageDown(index)}
-										disabled={index === images.length - 1}
-										className="h-6 w-6 p-0"
-									>
-										↓
-									</Button>
-								</div>
-
-								<span className="text-xs text-muted-foreground">
+						<Card key={image.id} className="relative group overflow-hidden border-2">
+							{/* Controles de navegación superiores */}
+							<div className="flex items-center justify-between p-2 bg-gray-50 border-b">
+								<Button
+									size="sm"
+									variant="ghost"
+									onClick={() => moveImageUp(index)}
+									disabled={index === 0}
+									className="h-8 w-8 p-0 hover:bg-gray-200 disabled:opacity-30"
+								>
+									←
+								</Button>
+								
+								<span className="text-sm font-medium text-gray-700 px-2">
 									{index + 1}
 								</span>
+								
+								<Button
+									size="sm"
+									variant="ghost"
+									onClick={() => moveImageDown(index)}
+									disabled={index === images.length - 1}
+									className="h-8 w-8 p-0 hover:bg-gray-200 disabled:opacity-30"
+								>
+									→
+								</Button>
+							</div>
+
+							{/* Container de imagen cuadrado */}
+							<div className="relative aspect-square bg-white flex items-center justify-center p-4">
+								<div className="relative w-full h-full flex items-center justify-center">
+									<img
+										src={image.url}
+										alt={image.alt_text || 'Producto'}
+										className="max-w-full max-h-full w-auto h-auto object-contain rounded-lg shadow-sm"
+									/>
+
+									{/* Overlay con acciones */}
+									<div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 rounded-lg">
+										<Button
+											size="sm"
+											variant="secondary"
+											onClick={() => setPrimaryImage(image.id!)}
+											className="h-8 w-8 p-0"
+										>
+											{image.is_primary ? (
+												<Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+											) : (
+												<StarOff className="w-4 h-4" />
+											)}
+										</Button>
+
+										<Button
+											size="sm"
+											variant="destructive"
+											onClick={() => removeImage(image.id!)}
+											className="h-8 w-8 p-0"
+										>
+											<Trash2 className="w-4 h-4" />
+										</Button>
+									</div>
+
+									{/* Badge de imagen principal */}
+									{image.is_primary && (
+										<Badge className="absolute -top-2 -left-2 bg-yellow-500 text-white">
+											Principal
+										</Badge>
+									)}
+
+									{/* Badge de imagen nueva */}
+									{image.isNew && (
+										<Badge className="absolute -top-2 -right-2 bg-blue-500 text-white">
+											Nueva
+										</Badge>
+									)}
+								</div>
 							</div>
 
 							{/* Input para alt text */}

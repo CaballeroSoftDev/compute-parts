@@ -383,30 +383,77 @@ export class AdminService {
       // Verificar permisos de administrador
       await checkAdminPermissions();
 
-      // Verificar que el producto existe
-      const { data: existingProduct } = await supabase
+      // Obtener el producto con sus imágenes ANTES de eliminar
+      const { data: existingProduct, error: fetchError } = await supabase
         .from('products')
-        .select('id')
+        .select(`
+          id,
+          name,
+          images:product_images(id, image_url)
+        `)
         .eq('id', id)
-        .single();
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error('Error fetching product for deletion:', fetchError);
+        throw new Error('Error al verificar el producto');
+      }
 
       if (!existingProduct) {
         throw new Error('Producto no encontrado');
       }
 
-      // Eliminar imágenes asociadas primero
-      await supabase.from('product_images').delete().eq('product_id', id);
+      // 1. PRIMERO: Eliminar imágenes del bucket de Supabase Storage
+      if (existingProduct.images && existingProduct.images.length > 0) {
+        for (const image of existingProduct.images) {
+          try {
+            // Extraer el path del URL de la imagen
+            const imagePath = this.extractImagePathFromUrl(image.image_url);
+            if (imagePath) {
+              await UploadService.deleteImage(imagePath, 'product-images');
+            }
+          } catch (error) {
+            // Continuar con la eliminación aunque falle una imagen
+          }
+        }
+      }
 
-      // Eliminar variantes asociadas
-      await supabase.from('product_variants').delete().eq('product_id', id);
+      // 2. SEGUNDO: Eliminar registros de imágenes de la BD
+      await supabase
+        .from('product_images')
+        .delete()
+        .eq('product_id', id);
 
-      // Eliminar el producto
-      const { error } = await supabase.from('products').delete().eq('id', id);
+      // 3. TERCERO: Eliminar variantes asociadas
+      await supabase
+        .from('product_variants')
+        .delete()
+        .eq('product_id', id);
 
-      if (error) throw error;
+      // 4. FINALMENTE: Eliminar el producto
+      const { error: deleteError } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', id);
+
+      if (deleteError) {
+        throw new Error('Error al eliminar el producto de la base de datos');
+      }
+
     } catch (error) {
       console.error('Error deleting product:', error);
       throw error;
+    }
+  }
+
+  // Función auxiliar para extraer el path de la imagen desde la URL
+  static extractImagePathFromUrl(imageUrl: string): string | null {
+    try {
+      // URL formato: https://xxx.supabase.co/storage/v1/object/public/product-images/path/to/image.jpg
+      const match = imageUrl.match(/\/storage\/v1\/object\/public\/product-images\/(.+)$/);
+      return match ? match[1] : null;
+    } catch (error) {
+      return null;
     }
   }
 
@@ -508,12 +555,6 @@ export class AdminService {
 
       // Solo procesar imagen si ha cambiado
       const imageChanged = this.hasImageChanged(imageFile || null, existingCategory.image_url);
-      console.log('🔍 Verificando cambio de imagen:', {
-        hasImageFile: !!imageFile,
-        existingImageUrl: existingCategory.image_url,
-        newFileName: imageFile?.name,
-        imageChanged
-      });
       
       if (imageChanged) {
         if (imageFile) {
@@ -529,9 +570,7 @@ export class AdminService {
             try {
               const oldImagePath = this.extractStoragePath(existingCategory.image_url, 'category-images');
               if (oldImagePath) {
-                console.log('🗑️ Eliminando imagen anterior:', oldImagePath);
                 const deleteResult = await UploadService.deleteImage(oldImagePath, UploadService.getBucketInfo('category').bucket);
-                console.log('🗑️ Resultado eliminación:', deleteResult);
               }
             } catch (error) {
               console.warn('Error deleting old image:', error);

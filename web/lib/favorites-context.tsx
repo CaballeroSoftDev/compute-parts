@@ -45,11 +45,11 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const removeFromFavorites = (productId: number) => {
+  const removeFromFavorites = (productId: string) => {
     setFavorites((prev) => prev.filter((fav) => fav.id !== productId));
   };
 
-  const isFavorite = (productId: number) => {
+  const isFavorite = (productId: string) => {
     return favorites.some((fav) => fav.id === productId);
   };
 

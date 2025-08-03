@@ -60,13 +60,22 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
 
   // Cargar datos del producto si estamos editando
   useEffect(() => {
-    if (product) {
+    if (product && product.id) {
+      // Esperar a que categories y brands estén cargadas
+      if (categories.length === 0 || brands.length === 0) {
+        return; // No establecer formData hasta que ambas listas estén cargadas
+      }
+
+      // Usar product.category?.id y product.brand?.id
+      const categoryId = product.category?.id || '';
+      const brandId = product.brand?.id || '';
+      
       setFormData({
         name: product.name,
         description: product.description || '',
         short_description: product.short_description || '',
-        category_id: product.category_id || '',
-        brand_id: product.brand_id || '',
+        category_id: categoryId,
+        brand_id: brandId,
         sku: product.sku || '',
         price: product.price,
         compare_price: product.compare_price || 0,
@@ -93,17 +102,49 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
           alt_text: img.alt_text || undefined,
           is_primary: img.is_primary,
           sort_order: img.sort_order || undefined,
+          isNew: false, // Imágenes existentes no son nuevas
         })) || [],
       });
+    } else if (!product) {
+      // Limpiar formulario cuando no hay producto (crear nuevo)
+      setFormData({
+        name: '',
+        description: '',
+        short_description: '',
+        category_id: '',
+        brand_id: '',
+        sku: '',
+        price: 0,
+        compare_price: 0,
+        cost_price: 0,
+        stock_quantity: 0,
+        low_stock_threshold: 5,
+        weight: 0,
+        dimensions: {
+          length: 0,
+          width: 0,
+          height: 0,
+        },
+        specifications: {},
+        is_active: true,
+        is_featured: false,
+        is_bestseller: false,
+        meta_title: '',
+        meta_description: '',
+        tags: [],
+        images: [],
+      });
     }
-  }, [product]);
+  }, [product?.id, categories, brands]); // ✅ Esperar categories y brands también
+
+
 
   // Generar SKU automáticamente
   const generateSku = async () => {
-    if (!formData.name || !formData.category_id || !formData.brand_id) {
+    if (!formData.name) {
       toast({
         title: 'Información requerida',
-        description: 'Necesitas completar el nombre, categoría y marca para generar el SKU',
+        description: 'Necesitas completar al menos el nombre del producto para generar el SKU',
         variant: 'destructive',
       });
       return;
@@ -111,20 +152,23 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
 
     setIsGeneratingSku(true);
     try {
-      const category = categories.find(c => c.id === formData.category_id);
-      const brand = brands.find(b => b.id === formData.brand_id);
+      // Obtener códigos de categoría y marca si están disponibles
+      let categoryCode = "PRD";
+      let brandCode = "GEN";
       
-      if (!category || !brand) {
-        toast({
-          title: 'Error',
-          description: 'No se pudo encontrar la categoría o marca seleccionada',
-          variant: 'destructive',
-        });
-        return;
+      if (formData.category_id) {
+        const category = categories.find(c => c.id === formData.category_id);
+        if (category) {
+          categoryCode = category.name.substring(0, 3).toUpperCase();
+        }
       }
-
-      const categoryCode = category.name.substring(0, 3).toUpperCase();
-      const brandCode = brand.name.substring(0, 3).toUpperCase();
+      
+      if (formData.brand_id) {
+        const brand = brands.find(b => b.id === formData.brand_id);
+        if (brand) {
+          brandCode = brand.name.substring(0, 3).toUpperCase();
+        }
+      }
       const productCode = formData.name.substring(0, 3).toUpperCase();
       const timestamp = Date.now().toString().slice(-4);
       
@@ -225,7 +269,8 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
         alt_text: img.alt_text,
         is_primary: img.is_primary,
         sort_order: img.sort_order,
-        isNew: !img.id || img.id.startsWith('temp-'), // Identificar imágenes nuevas
+        isNew: img.isNew || (!img.id || img.id.startsWith('temp-')), // Usar isNew del objeto o inferir
+        file: img.file, // Asegurar que se incluye el archivo
       }));
 
       if (product) {
@@ -255,12 +300,12 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
         } as UpdateProductForm);
       } else {
         // Crear nuevo producto
-        const tempProductId = `temp-${Date.now()}`;
-        
-        // Subir imágenes nuevas si las hay
+        // Ahora que preservamos los archivos correctamente, podemos procesar imágenes
         let finalImages = currentImages;
-        if (productImages.some(img => img.isNew)) {
+        if (productImages.some(img => img.isNew && img.file)) {
           try {
+            // Usar un ID temporal único para la subida
+            const tempProductId = `temp-${Date.now()}`;
             finalImages = await uploadNewImages(productImages, tempProductId);
           } catch (error) {
             toast({
@@ -297,6 +342,7 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
 
   const handleImagesChange = (images: ProductImage[]) => {
     // Convertir ProductImage a ProductImageForm para el formulario
+    // MANTENER file e isNew para preservar archivos y estado
     const imageForms: ProductImageForm[] = images.map(img => ({
       id: img.id,
       url: img.url,
@@ -304,6 +350,8 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
       alt_text: img.alt_text,
       is_primary: img.is_primary,
       sort_order: img.sort_order,
+      file: img.file, // ✅ Preservar archivo
+      isNew: img.isNew, // ✅ Preservar estado de nueva imagen
     }));
     
     setFormData(prev => ({
@@ -407,37 +455,16 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="sku">SKU *</Label>
-                  <div className="flex space-x-2">
-                    <Input
-                      id="sku"
-                      value={formData.sku}
-                      onChange={(e) => handleInputChange('sku', e.target.value)}
-                      placeholder="SKU del producto"
-                      className={errors.sku ? 'border-red-500' : ''}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={generateSku}
-                      disabled={isGeneratingSku || !formData.name || !formData.category_id || !formData.brand_id}
-                    >
-                      {isGeneratingSku ? 'Generando...' : 'Auto'}
-                    </Button>
-                  </div>
-                  {errors.sku && <p className="text-sm text-red-500">{errors.sku}</p>}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="space-y-2">
                   <Label htmlFor="category">Categoría *</Label>
                   <Select
+                    key={`category-select-${product?.id || 'new'}-${formData.category_id}-${categories.length}`}
                     value={formData.category_id}
                     onValueChange={(value) => handleInputChange('category_id', value)}
                   >
                     <SelectTrigger className={errors.category_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Seleccionar categoría" />
+                      <SelectValue 
+                        placeholder="Seleccionar categoría"
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {categories.map((category) => (
@@ -452,15 +479,20 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
                   </Select>
                   {errors.category_id && <p className="text-sm text-red-500">{errors.category_id}</p>}
                 </div>
+              </div>
 
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="brand">Marca *</Label>
                   <Select
+                    key={`brand-select-${product?.id || 'new'}-${formData.brand_id}-${brands.length}`}
                     value={formData.brand_id}
                     onValueChange={(value) => handleInputChange('brand_id', value)}
                   >
                     <SelectTrigger className={errors.brand_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Seleccionar marca" />
+                      <SelectValue 
+                        placeholder="Seleccionar marca"
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {brands.map((brand) => (
@@ -474,6 +506,28 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
                     </SelectContent>
                   </Select>
                   {errors.brand_id && <p className="text-sm text-red-500">{errors.brand_id}</p>}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="sku">SKU *</Label>
+                  <div className="flex space-x-2">
+                    <Input
+                      id="sku"
+                      value={formData.sku}
+                      onChange={(e) => handleInputChange('sku', e.target.value)}
+                      placeholder="SKU del producto"
+                      className={errors.sku ? 'border-red-500' : ''}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={generateSku}
+                      disabled={isGeneratingSku}
+                    >
+                      {isGeneratingSku ? 'Generando...' : 'Auto'}
+                    </Button>
+                  </div>
+                  {errors.sku && <p className="text-sm text-red-500">{errors.sku}</p>}
                 </div>
               </div>
 
@@ -509,6 +563,8 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
                 alt_text: img.alt_text,
                 is_primary: img.is_primary,
                 sort_order: img.sort_order,
+                file: img.file,
+                isNew: img.isNew || false,
               })) || []}
               onImagesChange={handleImagesChange}
               productId={product?.id}

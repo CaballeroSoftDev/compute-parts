@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SlidersHorizontal } from 'lucide-react';
@@ -10,109 +10,55 @@ import { useFavorites } from '@/lib/favorites-context';
 import type { CatalogProduct, CatalogFilters } from '@/lib/interfaces/catalog';
 import { ProductFilters } from '@/components/catalog/ProductFilters';
 import { ProductCard } from '@/components/catalog/ProductCard';
-
-// Datos de ejemplo
-const products: CatalogProduct[] = [
-  {
-    id: 1,
-    name: 'Procesador Intel Core i7-12700K',
-    price: 7999,
-    brand: 'Intel',
-    category: 'Procesadores',
-    image: '/placeholder.svg?height=300&width=300',
-  },
-  {
-    id: 2,
-    name: 'Tarjeta Gráfica NVIDIA RTX 3080',
-    price: 15999,
-    brand: 'NVIDIA',
-    category: 'Tarjetas Gráficas',
-    image: '/placeholder.svg?height=300&width=300',
-  },
-  {
-    id: 3,
-    name: 'Memoria RAM Corsair Vengeance 16GB',
-    price: 1499,
-    brand: 'Corsair',
-    category: 'Memorias',
-    image: '/placeholder.svg?height=300&width=300',
-  },
-  {
-    id: 4,
-    name: 'SSD Samsung 970 EVO 1TB',
-    price: 2499,
-    brand: 'Samsung',
-    category: 'Almacenamiento',
-    image: '/placeholder.svg?height=300&width=300',
-  },
-  {
-    id: 5,
-    name: 'Placa Base ASUS ROG Strix Z690-E',
-    price: 6799,
-    brand: 'ASUS',
-    category: 'Placas Base',
-    image: '/placeholder.svg?height=300&width=300',
-  },
-  {
-    id: 6,
-    name: 'Fuente de Poder EVGA SuperNOVA 850W',
-    price: 2299,
-    brand: 'EVGA',
-    category: 'Fuentes de Poder',
-    image: '/placeholder.svg?height=300&width=300',
-  },
-  {
-    id: 7,
-    name: 'Gabinete NZXT H510',
-    price: 1899,
-    brand: 'NZXT',
-    category: 'Gabinetes',
-    image: '/placeholder.svg?height=300&width=300',
-  },
-  {
-    id: 8,
-    name: 'Monitor LG UltraGear 27" 144Hz',
-    price: 5999,
-    brand: 'LG',
-    category: 'Monitores',
-    image: '/placeholder.svg?height=300&width=300',
-  },
-];
-
-const categories = [
-  'Procesadores',
-  'Tarjetas Gráficas',
-  'Memorias',
-  'Almacenamiento',
-  'Placas Base',
-  'Fuentes de Poder',
-  'Gabinetes',
-  'Monitores',
-];
-
-const brands = ['Intel', 'NVIDIA', 'Corsair', 'Samsung', 'ASUS', 'EVGA', 'NZXT', 'LG'];
+import { CatalogService } from '@/lib/utils/catalog-service';
 
 export default function CatalogPage() {
+  const [products, setProducts] = useState<CatalogProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<CatalogFilters>({
     searchTerm: '',
     priceRange: [0, 20000],
     selectedCategories: [],
     selectedBrands: [],
   });
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
-  const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+
+  const { favorites, addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+
+  // Cargar productos desde la base de datos
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const catalogProducts = await CatalogService.getCatalogProducts();
+        setProducts(catalogProducts);
+      } catch (err) {
+        console.error('Error loading catalog products:', err);
+        setError('Error al cargar los productos');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, []);
 
   // Filtrar productos
   const filteredProducts = products.filter((product) => {
-    const matchesSearch =
+    const matchesSearch = !filters.searchTerm || 
       product.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
       product.brand.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
       product.category.toLowerCase().includes(filters.searchTerm.toLowerCase());
 
     const matchesPrice = product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1];
-    const matchesCategory =
-      filters.selectedCategories.length === 0 || filters.selectedCategories.includes(product.category);
-    const matchesBrand = filters.selectedBrands.length === 0 || filters.selectedBrands.includes(product.brand);
+
+    const matchesCategory = filters.selectedCategories.length === 0 || 
+      filters.selectedCategories.includes(product.category);
+
+    const matchesBrand = filters.selectedBrands.length === 0 || 
+      filters.selectedBrands.includes(product.brand);
 
     return matchesSearch && matchesPrice && matchesCategory && matchesBrand;
   });
@@ -158,54 +104,98 @@ export default function CatalogPage() {
     });
   };
 
+  // Mostrar loading
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="container py-6 md:py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#007BFF] mx-auto mb-4"></div>
+              <p className="text-gray-600">Cargando productos...</p>
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Mostrar error
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="container py-6 md:py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <p className="text-red-600 mb-4">{error}</p>
+              <Button onClick={() => window.location.reload()}>
+                Reintentar
+              </Button>
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       <div className="container py-6 md:py-8">
         <div className="mb-6">
-          <h1 className="mb-2 text-2xl font-bold text-black">Catálogo de Productos</h1>
-          <div className="flex flex-col items-center gap-4 sm:flex-row">
-            <div className="relative w-full">
+          <h1 className="mb-4 text-2xl font-bold text-black">Catálogo de Productos</h1>
+          <div className="flex flex-col gap-4 sm:flex-row">
+            <div className="relative flex-1">
               <Input
+                type="text"
                 placeholder="Buscar productos..."
-                className="pl-4"
                 value={filters.searchTerm}
                 onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })}
+                className="pr-4"
               />
             </div>
             <Button
               variant="outline"
-              className="w-full bg-transparent sm:w-auto md:hidden"
-              onClick={() => setShowMobileFilters(true)}
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2"
             >
-              <SlidersHorizontal className="mr-2 h-4 w-4" />
+              <SlidersHorizontal className="h-4 w-4" />
               Filtros
             </Button>
           </div>
         </div>
 
-        <div className="flex flex-col gap-6 md:flex-row">
+        <div className="flex flex-col gap-6 lg:flex-row">
           {/* Filtros */}
-          <ProductFilters
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
-            categories={categories}
-            brands={brands}
-            showMobileFilters={showMobileFilters}
-            onCloseMobileFilters={() => setShowMobileFilters(false)}
-          />
+          <div className={`lg:w-64 ${showFilters ? 'block' : 'hidden lg:block'}`}>
+            <ProductFilters
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+              onClearFilters={clearAllFilters}
+              products={products}
+            />
+          </div>
 
-          {/* Lista de productos */}
+          {/* Productos */}
           <div className="flex-1">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                Mostrando {filteredProducts.length} de {products.length} productos
+              </p>
+            </div>
+
             {filteredProducts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <p className="mb-2 text-lg font-medium">No se encontraron productos</p>
-                <p className="mb-4 text-gray-500">Intenta con otros filtros o términos de búsqueda</p>
-                <Button
-                  variant="outline"
-                  onClick={clearAllFilters}
-                >
-                  Limpiar Filtros
-                </Button>
+              <div className="flex min-h-[400px] items-center justify-center">
+                <div className="text-center">
+                  <p className="mb-2 text-lg font-semibold text-gray-700">
+                    No se encontraron productos
+                  </p>
+                  <p className="text-gray-500">
+                    Intenta ajustar tus filtros de búsqueda
+                  </p>
+                  <Button onClick={clearAllFilters} className="mt-4">
+                    Limpiar filtros
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

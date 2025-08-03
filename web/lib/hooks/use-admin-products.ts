@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { AdminService } from '@/lib/services/admin-service';
 import type { AdminProduct, AdminFilters, CreateProductForm, UpdateProductForm } from '@/lib/types/admin';
 
@@ -36,20 +36,61 @@ export function useAdminProducts(): UseAdminProductsReturn {
     total_pages: 0,
   });
   const [filters, setFiltersState] = useState<AdminFilters>({});
+  const isMountedRef = useRef(true);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const fetchProducts = useCallback(async () => {
+    // Cancelar request anterior si existe
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Crear nuevo AbortController
+    abortControllerRef.current = new AbortController();
+
     try {
+      if (!isMountedRef.current) return;
+      
       setLoading(true);
       setError(null);
-      const response = await AdminService.getProducts(filters, pagination.page, pagination.limit);
+      
+      // Timeout de 10 segundos para la request
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout: La solicitud tardó demasiado')), 10000);
+      });
+
+      const dataPromise = AdminService.getProducts(filters, pagination.page, pagination.limit);
+      
+      const response = await Promise.race([dataPromise, timeoutPromise]) as Awaited<ReturnType<typeof AdminService.getProducts>>;
+      
+      if (!isMountedRef.current) return;
+      
       setProducts(response.data);
       setPagination(response.pagination);
     } catch (err) {
+      if (!isMountedRef.current) return;
+      
+      // Ignorar errores de abort
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
+      
       const errorMessage = err instanceof Error ? err.message : 'Error al cargar productos';
       setError(errorMessage);
       console.error('Error fetching products:', err);
+      
+      // Si es un error de timeout o red, ofrecer reintento automático
+      if (errorMessage.includes('Timeout') || errorMessage.includes('fetch')) {
+        setTimeout(() => {
+          if (isMountedRef.current) {
+            fetchProducts();
+          }
+        }, 3000);
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   }, [filters, pagination.page, pagination.limit]);
 
@@ -156,8 +197,16 @@ export function useAdminProducts(): UseAdminProductsReturn {
   }, []);
 
   useEffect(() => {
+    isMountedRef.current = true;
     fetchProducts();
-  }, [fetchProducts]);
+
+    return () => {
+      isMountedRef.current = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []); // Dependencias vacías para evitar loops infinitos
 
   return {
     products,
