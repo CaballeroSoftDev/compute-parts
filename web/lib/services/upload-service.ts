@@ -234,6 +234,13 @@ export class UploadService {
 				return { url: '', path: '', error: validation.error };
 			}
 
+			// Eliminar avatar anterior antes de subir el nuevo
+			const deleteResult = await this.deleteUserAvatar(userId);
+			if (!deleteResult.success) {
+				console.warn('Warning: Could not delete previous avatar:', deleteResult.error);
+				// No fallar si no se puede eliminar la imagen anterior
+			}
+
 			const fileExt = file.name.split('.').pop()?.toLowerCase();
 			const fileName = options?.fileName || `avatar-${Date.now()}.${fileExt}`;
 			const folder = options?.folder || userId;
@@ -337,6 +344,94 @@ export class UploadService {
 			return {
 				success: false,
 				error: error instanceof Error ? error.message : 'Error deleting image',
+			};
+		}
+	}
+
+	// Eliminar avatar anterior de usuario
+	static async deleteUserAvatar(userId: string, avatarUrl?: string): Promise<{ success: boolean; error?: string }> {
+		try {
+			// Si no se proporciona avatarUrl, obtenerlo del perfil
+			if (!avatarUrl) {
+				const { data: profile, error: profileError } = await supabase
+					.from('profiles')
+					.select('avatar_url')
+					.eq('id', userId)
+					.single();
+
+				if (profileError && profileError.code !== 'PGRST116') {
+					console.error('Error getting profile for avatar deletion:', profileError);
+					return { success: false, error: profileError.message };
+				}
+
+				avatarUrl = profile?.avatar_url;
+			}
+
+			// Si no hay avatar URL, no hay nada que eliminar
+			if (!avatarUrl) {
+				return { success: true };
+			}
+
+			// Extraer el path del archivo de la URL
+			let filePath: string | null = null;
+
+			try {
+				// Intentar parsear como URL completa
+				const url = new URL(avatarUrl);
+				const pathParts = url.pathname.split('/');
+				
+				// Buscar el bucket user-avatars en la URL
+				const bucketIndex = pathParts.findIndex(part => part === this.BUCKETS.USER_AVATARS);
+				if (bucketIndex !== -1 && bucketIndex + 1 < pathParts.length) {
+					// El path del archivo está después del bucket
+					filePath = pathParts.slice(bucketIndex + 1).join('/');
+				}
+			} catch (error) {
+				// Si no es una URL válida, intentar extraer el path directamente
+				console.warn('Invalid avatar URL format:', avatarUrl);
+			}
+
+			// Si no se pudo extraer el path, intentar eliminar por userId
+			if (!filePath) {
+				// Listar archivos en la carpeta del usuario y eliminar todos
+				const { data: files, error: listError } = await supabase.storage
+					.from(this.BUCKETS.USER_AVATARS)
+					.list(userId);
+
+				if (listError) {
+					console.warn('Error listing user avatar files:', listError);
+					return { success: false, error: listError.message };
+				}
+
+				if (files && files.length > 0) {
+					const filePaths = files.map(file => `${userId}/${file.name}`);
+					const { error: deleteError } = await supabase.storage
+						.from(this.BUCKETS.USER_AVATARS)
+						.remove(filePaths);
+
+					if (deleteError) {
+						console.warn('Error deleting user avatar files:', deleteError);
+						return { success: false, error: deleteError.message };
+					}
+				}
+			} else {
+				// Eliminar el archivo específico
+				const { error: deleteError } = await supabase.storage
+					.from(this.BUCKETS.USER_AVATARS)
+					.remove([filePath]);
+
+				if (deleteError) {
+					console.warn('Error deleting specific avatar file:', deleteError);
+					return { success: false, error: deleteError.message };
+				}
+			}
+
+			return { success: true };
+		} catch (error) {
+			console.error('Error in deleteUserAvatar:', error);
+			return {
+				success: false,
+				error: error instanceof Error ? error.message : 'Error deleting user avatar',
 			};
 		}
 	}
