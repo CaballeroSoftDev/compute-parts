@@ -69,9 +69,6 @@ export default function ProductsPage() {
 
   // Estados para filtros
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [stockFilter, setStockFilter] = useState('all');
 
   // Estados para estadísticas adicionales
   const [lowStockProducts, setLowStockProducts] = useState<AdminProduct[]>([]);
@@ -104,45 +101,15 @@ export default function ProductsPage() {
     };
   }, [clearError]);
 
-  // Aplicar filtros
-  const applyFilters = () => {
-    const newFilters: AdminFilters = {};
-
-    if (searchTerm) {
-      newFilters.search = searchTerm;
-    }
-
-    if (categoryFilter !== 'all') {
-      newFilters.category_id = categoryFilter;
-    }
-
-    if (statusFilter !== 'all') {
-      newFilters.is_active = statusFilter === 'active';
-    }
-
-    if (stockFilter !== 'all') {
-      if (stockFilter === 'low') {
-        newFilters.stock_min = 1;
-        newFilters.stock_max = 10;
-      } else if (stockFilter === 'out') {
-        newFilters.stock_min = 0;
-        newFilters.stock_max = 0;
-      }
-    }
-
-    setFilters(newFilters);
-    setPage(1);
-  };
-
-  // Limpiar filtros
-  const clearFilters = () => {
-    setSearchTerm('');
-    setCategoryFilter('all');
-    setStatusFilter('all');
-    setStockFilter('all');
-    setFilters({});
-    setPage(1);
-  };
+  // Filtrar productos localmente (como en categorías)
+  const filteredProducts = products.filter(
+    (product) =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (product.category?.name && product.category.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (product.brand?.name && product.brand.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   // Manejadores de formularios
   const handleCreateProduct = async (data: any) => {
@@ -413,7 +380,7 @@ export default function ProductsPage() {
             <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{products.filter((p) => p.is_active).length}</div>
+            <div className="text-2xl font-bold">{filteredProducts.filter((p) => p.is_active).length}</div>
           </CardContent>
         </Card>
         <Card>
@@ -440,90 +407,18 @@ export default function ProductsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Filtros</CardTitle>
-          <CardDescription>Busca y filtra productos</CardDescription>
+          <CardDescription>Busca productos</CardDescription>
         </CardHeader>
         <CardContent>
-                     <div className="space-y-4">
-             {/* Barra de búsqueda - Siempre arriba en móvil, en línea en desktop */}
-             <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-               <div className="relative w-full lg:flex-1">
-                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
-                 <Input
-                   placeholder="Buscar productos..."
-                   value={searchTerm}
-                   onChange={(e) => setSearchTerm(e.target.value)}
-                   className="pl-10 w-full"
-                 />
-               </div>
-               
-               {/* Filtros - Abajo en móvil, en línea en desktop */}
-               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:flex-nowrap lg:gap-3">
-                 <Select
-                   value={categoryFilter}
-                   onValueChange={setCategoryFilter}
-                 >
-                   <SelectTrigger className="w-full sm:w-[200px]">
-                     <SelectValue placeholder="Todas las categorías" />
-                   </SelectTrigger>
-                   <SelectContent>
-                     <SelectItem value="all">Todas las categorías</SelectItem>
-                     {categories.map((category) => (
-                       <SelectItem
-                         key={category.id}
-                         value={category.id}
-                       >
-                         {category.name}
-                       </SelectItem>
-                     ))}
-                   </SelectContent>
-                 </Select>
-                 
-                 <Select
-                   value={statusFilter}
-                   onValueChange={setStatusFilter}
-                 >
-                   <SelectTrigger className="w-full sm:w-[150px]">
-                     <SelectValue placeholder="Todos" />
-                   </SelectTrigger>
-                   <SelectContent>
-                     <SelectItem value="all">Todos</SelectItem>
-                     <SelectItem value="active">Activo</SelectItem>
-                     <SelectItem value="inactive">Inactivo</SelectItem>
-                   </SelectContent>
-                 </Select>
-                 
-                 <Select
-                   value={stockFilter}
-                   onValueChange={setStockFilter}
-                 >
-                   <SelectTrigger className="w-full sm:w-[150px]">
-                     <SelectValue placeholder="Todo el stock" />
-                   </SelectTrigger>
-                   <SelectContent>
-                     <SelectItem value="all">Todo el stock</SelectItem>
-                     <SelectItem value="low">Stock bajo</SelectItem>
-                     <SelectItem value="out">Agotados</SelectItem>
-                   </SelectContent>
-                 </Select>
-                 
-                 <div className="flex gap-2 w-full sm:w-auto">
-                   <Button 
-                     onClick={applyFilters}
-                     className="flex-1 sm:flex-none"
-                   >
-                     Aplicar Filtros
-                   </Button>
-                   <Button
-                     variant="outline"
-                     onClick={clearFilters}
-                     className="flex-1 sm:flex-none"
-                   >
-                     Limpiar
-                   </Button>
-                 </div>
-               </div>
-             </div>
-           </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+            <Input
+              placeholder="Buscar productos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -538,7 +433,7 @@ export default function ProductsPage() {
                 <span>{products.length > 0 ? 'Actualizando datos...' : 'Cargando productos...'}</span>
               </div>
             ) : (
-              `${products.length} productos encontrados`
+              `${filteredProducts.length} productos encontrados`
             )}
           </CardDescription>
         </CardHeader>
@@ -561,7 +456,7 @@ export default function ProductsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {products.map((product) => (
+                {filteredProducts.map((product) => (
                   <TableRow key={product.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center space-x-3">
