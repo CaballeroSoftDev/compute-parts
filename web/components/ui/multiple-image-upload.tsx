@@ -72,24 +72,20 @@ export function MultipleImageUpload({
         img.onload = () => {
           let { width, height } = img;
 
-          // Calcular nuevas dimensiones manteniendo aspect ratio
-          if (aspectRatio) {
-            const currentRatio = width / height;
-            if (currentRatio > aspectRatio) {
-              height = width / aspectRatio;
-            } else {
-              width = height * aspectRatio;
-            }
+          // Mantener la relación de aspecto original
+          const originalAspectRatio = width / height;
+
+          // Limitar dimensiones máximas manteniendo aspect ratio
+          if (width > maxWidth) {
+            height = width / originalAspectRatio;
+            width = maxWidth;
+            height = Math.min(height, maxHeight);
           }
 
-          // Limitar dimensiones máximas
-          if (width > maxWidth) {
-            height = (height * maxWidth) / width;
-            width = maxWidth;
-          }
           if (height > maxHeight) {
-            width = (width * maxHeight) / height;
+            width = height * originalAspectRatio;
             height = maxHeight;
+            width = Math.min(width, maxWidth);
           }
 
           canvas.width = width;
@@ -117,7 +113,7 @@ export function MultipleImageUpload({
         img.src = URL.createObjectURL(file);
       });
     },
-    [optimizeImage, aspectRatio, maxWidth, maxHeight]
+    [optimizeImage, maxWidth, maxHeight]
   );
 
   // Función para validar archivos

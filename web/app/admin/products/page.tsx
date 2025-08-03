@@ -124,7 +124,7 @@ export default function ProductsPage() {
   // Aplicar filtros
   useEffect(() => {
     const newFilters: AdminFilters = {};
-    
+
     if (searchTerm) newFilters.search = searchTerm;
     if (selectedCategory && selectedCategory !== 'all') newFilters.category_id = selectedCategory;
     if (selectedBrand && selectedBrand !== 'all') newFilters.brand_id = selectedBrand;
@@ -342,11 +342,11 @@ export default function ProductsPage() {
     const pages = [];
     const totalPages = pagination.total_pages;
     const currentPage = pagination.page;
-    
+
     // Mostrar máximo 5 páginas
     let startPage = Math.max(1, currentPage - 2);
     let endPage = Math.min(totalPages, currentPage + 2);
-    
+
     // Ajustar si estamos cerca del inicio o final
     if (endPage - startPage < 4) {
       if (startPage === 1) {
@@ -355,11 +355,11 @@ export default function ProductsPage() {
         startPage = Math.max(1, endPage - 4);
       }
     }
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
-    
+
     return pages;
   };
 
@@ -493,36 +493,51 @@ export default function ProductsPage() {
                 className="pl-10"
               />
             </div>
-            
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+
+            <Select
+              value={selectedCategory}
+              onValueChange={setSelectedCategory}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Todas las categorías" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas las categorías</SelectItem>
                 {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
+                  <SelectItem
+                    key={category.id}
+                    value={category.id}
+                  >
                     {category.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+            <Select
+              value={selectedBrand}
+              onValueChange={setSelectedBrand}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Todas las marcas" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas las marcas</SelectItem>
                 {brands.map((brand) => (
-                  <SelectItem key={brand.id} value={brand.id}>
+                  <SelectItem
+                    key={brand.id}
+                    value={brand.id}
+                  >
                     {brand.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+            <Select
+              value={selectedStatus}
+              onValueChange={setSelectedStatus}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Todos los estados" />
               </SelectTrigger>
@@ -560,7 +575,7 @@ export default function ProductsPage() {
             <div className="rounded-md border">
               <div className="h-[600px] overflow-auto">
                 <Table>
-                  <TableHeader className="sticky top-0 bg-white z-10">
+                  <TableHeader className="sticky top-0 z-10 bg-white">
                     <TableRow>
                       <TableHead className="w-[300px]">Producto</TableHead>
                       <TableHead className="w-[150px]">Categoría</TableHead>
@@ -582,8 +597,8 @@ export default function ProductsPage() {
                               className="h-10 w-10 rounded-md object-cover"
                             />
                             <div className="min-w-0 flex-1">
-                              <div className="font-medium truncate">{product.name}</div>
-                              <div className="text-sm text-gray-500 truncate">{product.sku}</div>
+                              <div className="truncate font-medium">{product.name}</div>
+                              <div className="truncate text-sm text-gray-500">{product.sku}</div>
                               {product.is_featured && (
                                 <Badge
                                   variant="secondary"
@@ -683,19 +698,19 @@ export default function ProductsPage() {
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            
+
             {getPageNumbers().map((pageNum) => (
               <Button
                 key={pageNum}
-                variant={pageNum === pagination.page ? "default" : "outline"}
+                variant={pageNum === pagination.page ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => goToPage(pageNum)}
-                className="w-8 h-8 p-0"
+                className="h-8 w-8 p-0"
               >
                 {pageNum}
               </Button>
             ))}
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -824,7 +839,11 @@ export default function ProductsPage() {
                   <label className="text-sm font-medium">Etiquetas</label>
                   <div className="mt-1 flex flex-wrap gap-1">
                     {selectedProduct.tags.map((tag, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
+                      <Badge
+                        key={index}
+                        variant="outline"
+                        className="text-xs"
+                      >
                         {tag}
                       </Badge>
                     ))}

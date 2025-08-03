@@ -17,11 +17,12 @@ export class CatalogService {
 					id,
 					name,
 					price,
-					brand:brands(name),
-					category:categories(name),
+					brand_id,
+					category_id,
 					images:product_images(
 						image_url,
-						is_primary
+						is_primary,
+						sort_order
 					)
 				`
         )
@@ -33,6 +34,18 @@ export class CatalogService {
         return [];
       }
 
+      // Obtener marcas y categorías por separado
+      const brandIds = [...new Set(products.map((p) => p.brand_id).filter(Boolean))];
+      const categoryIds = [...new Set(products.map((p) => p.category_id).filter(Boolean))];
+
+      const { data: brands } = await supabase.from('brands').select('id, name').in('id', brandIds);
+
+      const { data: categories } = await supabase.from('categories').select('id, name').in('id', categoryIds);
+
+      // Crear mapas para acceso rápido
+      const brandMap = new Map(brands?.map((b) => [b.id, b.name]) || []);
+      const categoryMap = new Map(categories?.map((c) => [c.id, c.name]) || []);
+
       // Transformar los datos al formato CatalogProduct
       return products.map((product) => {
         // Obtener la imagen primaria o la primera imagen disponible
@@ -40,13 +53,20 @@ export class CatalogService {
         const firstImage = product.images?.[0];
         const imageUrl = primaryImage?.image_url || firstImage?.image_url || '/placeholder.svg';
 
+        // Obtener todas las imágenes ordenadas por sort_order
+        const allImages =
+          product.images
+            ?.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+            .map((img) => this.getValidImageUrl(img.image_url)) || [];
+
         return {
           id: product.id,
           name: product.name,
           price: typeof product.price === 'string' ? parseFloat(product.price) : product.price,
-          brand: product.brand?.name || 'Sin marca',
-          category: product.category?.name || 'Sin categoría',
+          brand: brandMap.get(product.brand_id) || 'Sin marca',
+          category: categoryMap.get(product.category_id) || 'Sin categoría',
           image: this.getValidImageUrl(imageUrl),
+          images: allImages.length > 0 ? allImages : [this.getValidImageUrl(imageUrl)],
         };
       });
     } catch (error) {
@@ -71,16 +91,16 @@ export class CatalogService {
 					id,
 					name,
 					price,
-					brand:brands(name),
-					category:categories(name),
-					images:product_images!inner(
+					brand_id,
+					category_id,
+					images:product_images(
 						image_url,
-						is_primary
+						is_primary,
+						sort_order
 					)
 				`
         )
         .eq('is_active', true)
-        .eq('product_images.is_primary', true)
         .or(`name.ilike.%${term}%,description.ilike.%${term}%`)
         .order('created_at', { ascending: false });
 
@@ -89,14 +109,40 @@ export class CatalogService {
         return [];
       }
 
-      return products.map((product) => ({
-        id: product.id,
-        name: product.name,
-        price: parseFloat(product.price.toString()),
-        brand: product.brand?.name || 'Sin marca',
-        category: product.category?.name || 'Sin categoría',
-        image: product.images?.[0]?.image_url || '/placeholder.svg',
-      }));
+      // Obtener marcas y categorías por separado
+      const brandIds = [...new Set(products.map((p) => p.brand_id).filter(Boolean))];
+      const categoryIds = [...new Set(products.map((p) => p.category_id).filter(Boolean))];
+
+      const { data: brands } = await supabase.from('brands').select('id, name').in('id', brandIds);
+
+      const { data: categories } = await supabase.from('categories').select('id, name').in('id', categoryIds);
+
+      // Crear mapas para acceso rápido
+      const brandMap = new Map(brands?.map((b) => [b.id, b.name]) || []);
+      const categoryMap = new Map(categories?.map((c) => [c.id, c.name]) || []);
+
+      return products.map((product) => {
+        // Obtener la imagen primaria o la primera imagen disponible
+        const primaryImage = product.images?.find((img) => img.is_primary);
+        const firstImage = product.images?.[0];
+        const imageUrl = primaryImage?.image_url || firstImage?.image_url || '/placeholder.svg';
+
+        // Obtener todas las imágenes ordenadas por sort_order
+        const allImages =
+          product.images
+            ?.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+            .map((img) => this.getValidImageUrl(img.image_url)) || [];
+
+        return {
+          id: product.id,
+          name: product.name,
+          price: typeof product.price === 'string' ? parseFloat(product.price) : product.price,
+          brand: brandMap.get(product.brand_id) || 'Sin marca',
+          category: categoryMap.get(product.category_id) || 'Sin categoría',
+          image: this.getValidImageUrl(imageUrl),
+          images: allImages.length > 0 ? allImages : [this.getValidImageUrl(imageUrl)],
+        };
+      });
     } catch (error) {
       console.error('Error in searchProducts:', error);
       return [];
@@ -115,17 +161,17 @@ export class CatalogService {
 					id,
 					name,
 					price,
-					brand:brands(name),
-					category:categories(name),
-					images:product_images!inner(
+					brand_id,
+					category_id,
+					images:product_images(
 						image_url,
-						is_primary
+						is_primary,
+						sort_order
 					)
 				`
         )
         .eq('is_active', true)
         .eq('category_id', categoryId)
-        .eq('product_images.is_primary', true)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -133,14 +179,40 @@ export class CatalogService {
         return [];
       }
 
-      return products.map((product) => ({
-        id: product.id,
-        name: product.name,
-        price: parseFloat(product.price.toString()),
-        brand: product.brand?.name || 'Sin marca',
-        category: product.category?.name || 'Sin categoría',
-        image: product.images?.[0]?.image_url || '/placeholder.svg',
-      }));
+      // Obtener marcas y categorías por separado
+      const brandIds = [...new Set(products.map((p) => p.brand_id).filter(Boolean))];
+      const categoryIds = [...new Set(products.map((p) => p.category_id).filter(Boolean))];
+
+      const { data: brands } = await supabase.from('brands').select('id, name').in('id', brandIds);
+
+      const { data: categories } = await supabase.from('categories').select('id, name').in('id', categoryIds);
+
+      // Crear mapas para acceso rápido
+      const brandMap = new Map(brands?.map((b) => [b.id, b.name]) || []);
+      const categoryMap = new Map(categories?.map((c) => [c.id, c.name]) || []);
+
+      return products.map((product) => {
+        // Obtener la imagen primaria o la primera imagen disponible
+        const primaryImage = product.images?.find((img) => img.is_primary);
+        const firstImage = product.images?.[0];
+        const imageUrl = primaryImage?.image_url || firstImage?.image_url || '/placeholder.svg';
+
+        // Obtener todas las imágenes ordenadas por sort_order
+        const allImages =
+          product.images
+            ?.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+            .map((img) => this.getValidImageUrl(img.image_url)) || [];
+
+        return {
+          id: product.id,
+          name: product.name,
+          price: typeof product.price === 'string' ? parseFloat(product.price) : product.price,
+          brand: brandMap.get(product.brand_id) || 'Sin marca',
+          category: categoryMap.get(product.category_id) || 'Sin categoría',
+          image: this.getValidImageUrl(imageUrl),
+          images: allImages.length > 0 ? allImages : [this.getValidImageUrl(imageUrl)],
+        };
+      });
     } catch (error) {
       console.error('Error in getProductsByCategory:', error);
       return [];
@@ -159,11 +231,12 @@ export class CatalogService {
 					id,
 					name,
 					price,
-					brand:brands(name),
-					category:categories(name),
+					brand_id,
+					category_id,
 					images:product_images(
 						image_url,
-						is_primary
+						is_primary,
+						sort_order
 					)
 				`
         )
@@ -176,19 +249,38 @@ export class CatalogService {
         return [];
       }
 
+      // Obtener marcas y categorías por separado
+      const brandIds = [...new Set(products.map((p) => p.brand_id).filter(Boolean))];
+      const categoryIds = [...new Set(products.map((p) => p.category_id).filter(Boolean))];
+
+      const { data: brands } = await supabase.from('brands').select('id, name').in('id', brandIds);
+
+      const { data: categories } = await supabase.from('categories').select('id, name').in('id', categoryIds);
+
+      // Crear mapas para acceso rápido
+      const brandMap = new Map(brands?.map((b) => [b.id, b.name]) || []);
+      const categoryMap = new Map(categories?.map((c) => [c.id, c.name]) || []);
+
       return products.map((product) => {
         // Obtener la imagen primaria o la primera imagen disponible
         const primaryImage = product.images?.find((img) => img.is_primary);
         const firstImage = product.images?.[0];
         const imageUrl = primaryImage?.image_url || firstImage?.image_url || '/placeholder.svg';
 
+        // Obtener todas las imágenes ordenadas por sort_order
+        const allImages =
+          product.images
+            ?.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+            .map((img) => this.getValidImageUrl(img.image_url)) || [];
+
         return {
           id: product.id,
           name: product.name,
           price: typeof product.price === 'string' ? parseFloat(product.price) : product.price,
-          brand: product.brand?.name || 'Sin marca',
-          category: product.category?.name || 'Sin categoría',
+          brand: brandMap.get(product.brand_id) || 'Sin marca',
+          category: categoryMap.get(product.category_id) || 'Sin categoría',
           image: this.getValidImageUrl(imageUrl),
+          images: allImages.length > 0 ? allImages : [this.getValidImageUrl(imageUrl)],
         };
       });
     } catch (error) {

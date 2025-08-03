@@ -184,7 +184,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   }
 
   // Preparar imágenes del producto
-  const productImages = product.images && product.images.length > 0 ? product.images : [product.image]; // Usar la imagen principal si no hay galería
+  const productImages = product.images && product.images.length > 0 ? product.images : [product.image];
 
   return (
     <MainLayout>

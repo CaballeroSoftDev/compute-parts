@@ -564,17 +564,21 @@ export class UploadService {
       const img = new Image();
 
       img.onload = () => {
-        // Calcular nuevas dimensiones manteniendo aspect ratio
+        // Mantener la relación de aspecto original
         let { width, height } = img;
+        const originalAspectRatio = width / height;
 
+        // Limitar dimensiones máximas manteniendo aspect ratio
         if (width > maxWidth) {
-          height = (height * maxWidth) / width;
+          height = width / originalAspectRatio;
           width = maxWidth;
+          height = Math.min(height, maxHeight);
         }
 
         if (height > maxHeight) {
-          width = (width * maxHeight) / height;
+          width = height * originalAspectRatio;
           height = maxHeight;
+          width = Math.min(width, maxWidth);
         }
 
         canvas.width = width;

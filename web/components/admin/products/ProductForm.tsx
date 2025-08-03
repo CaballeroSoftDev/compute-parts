@@ -202,7 +202,7 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
   };
 
   const removeTag = (tagToRemove: string) => {
-    handleInputChange('tags', formData.tags?.filter(tag => tag !== tagToRemove) || []);
+    handleInputChange('tags', formData.tags?.filter((tag) => tag !== tagToRemove) || []);
   };
 
   const handleTagKeyPress = (e: React.KeyboardEvent) => {
@@ -637,7 +637,6 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
                 optimizeImage={true}
                 maxWidth={1920}
                 maxHeight={1080}
-                aspectRatio={4 / 3}
                 showPreview={true}
                 previewSize="md"
               />

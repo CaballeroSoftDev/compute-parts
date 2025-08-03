@@ -5,6 +5,7 @@ export interface CatalogProduct {
   brand: string;
   category: string;
   image: string;
+  images?: string[];
 }
 
 export interface CatalogFilters {

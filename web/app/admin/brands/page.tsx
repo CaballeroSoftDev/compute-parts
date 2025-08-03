@@ -516,7 +516,6 @@ export default function BrandsPage() {
               optimizeImage={true}
               maxWidth={400}
               maxHeight={400}
-              aspectRatio={1 / 1}
               showPreview={true}
               previewSize="md"
               uploadOnSelect={false} // No subir inmediatamente
@@ -606,7 +605,6 @@ export default function BrandsPage() {
               optimizeImage={true}
               maxWidth={400}
               maxHeight={400}
-              aspectRatio={1 / 1}
               showPreview={true}
               previewSize="md"
               uploadOnSelect={false} // No subir inmediatamente

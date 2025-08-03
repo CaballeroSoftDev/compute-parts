@@ -100,11 +100,11 @@ function CatalogContent() {
   const getPageNumbers = () => {
     const pages = [];
     const currentPageNum = currentPage;
-    
+
     // Mostrar máximo 5 páginas
     let startPage = Math.max(1, currentPageNum - 2);
     let endPage = Math.min(totalPages, currentPageNum + 2);
-    
+
     // Ajustar si estamos cerca del inicio o final
     if (endPage - startPage < 4) {
       if (startPage === 1) {
@@ -113,11 +113,11 @@ function CatalogContent() {
         startPage = Math.max(1, endPage - 4);
       }
     }
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
-    
+
     return pages;
   };
 
@@ -325,19 +325,19 @@ function CatalogContent() {
                       >
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
-                      
+
                       {getPageNumbers().map((pageNum) => (
                         <Button
                           key={pageNum}
-                          variant={pageNum === currentPage ? "default" : "outline"}
+                          variant={pageNum === currentPage ? 'default' : 'outline'}
                           size="sm"
                           onClick={() => goToPage(pageNum)}
-                          className="w-8 h-8 p-0"
+                          className="h-8 w-8 p-0"
                         >
                           {pageNum}
                         </Button>
                       ))}
-                      
+
                       <Button
                         variant="outline"
                         size="sm"

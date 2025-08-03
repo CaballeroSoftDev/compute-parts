@@ -501,7 +501,6 @@ export default function CategoriesPage() {
               optimizeImage={true}
               maxWidth={800}
               maxHeight={600}
-              aspectRatio={4 / 3}
               showPreview={true}
               previewSize="md"
               uploadOnSelect={false} // No subir inmediatamente
@@ -587,7 +586,6 @@ export default function CategoriesPage() {
               optimizeImage={true}
               maxWidth={800}
               maxHeight={600}
-              aspectRatio={4 / 3}
               showPreview={true}
               previewSize="md"
               uploadOnSelect={false} // No subir inmediatamente
