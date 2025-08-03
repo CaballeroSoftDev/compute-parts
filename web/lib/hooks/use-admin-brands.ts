@@ -31,34 +31,34 @@ export function useAdminBrands(): UseAdminBrandsReturn {
 
     try {
       if (!isMountedRef.current) return;
-      
+
       setLoading(true);
       setError(null);
-      
+
       // Timeout de 10 segundos para la request
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Timeout: La solicitud tardó demasiado')), 10000);
       });
 
       const dataPromise = AdminService.getBrands();
-      
-      const data = await Promise.race([dataPromise, timeoutPromise]) as AdminBrand[];
-      
+
+      const data = (await Promise.race([dataPromise, timeoutPromise])) as AdminBrand[];
+
       if (!isMountedRef.current) return;
-      
+
       setBrands(data);
     } catch (err) {
       if (!isMountedRef.current) return;
-      
+
       // Ignorar errores de abort
       if (err instanceof Error && err.name === 'AbortError') {
         return;
       }
-      
+
       const errorMessage = err instanceof Error ? err.message : 'Error al cargar marcas';
       setError(errorMessage);
       console.error('Error fetching brands:', err);
-      
+
       // Si es un error de timeout o red, ofrecer reintento automático
       if (errorMessage.includes('Timeout') || errorMessage.includes('fetch')) {
         console.log('Reintentando carga de marcas en 3 segundos...');

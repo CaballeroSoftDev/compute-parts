@@ -33,7 +33,8 @@ import type { AdminCategory, CreateCategoryForm, UpdateCategoryForm } from '@/li
 
 export default function CategoriesPage() {
   const { toast } = useToast();
-  const { categories, loading, error, createCategory, updateCategory, deleteCategory, refreshCategories, clearError } = useAdminCategories();
+  const { categories, loading, error, createCategory, updateCategory, deleteCategory, refreshCategories, clearError } =
+    useAdminCategories();
 
   // Limpiar estados al desmontar el componente
   useEffect(() => {
@@ -215,7 +216,7 @@ export default function CategoriesPage() {
         <div className="text-center">
           <Tags className="mx-auto mb-4 h-12 w-12 text-red-500" />
           <h3 className="text-lg font-semibold text-gray-900">Error al cargar categorías</h3>
-          <p className="text-gray-500 max-w-md">{error}</p>
+          <p className="max-w-md text-gray-500">{error}</p>
           <div className="mt-4 space-x-2">
             <Button
               onClick={handleRefresh}
@@ -269,7 +270,12 @@ export default function CategoriesPage() {
             <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             {loading ? 'Actualizando...' : 'Actualizar'}
           </Button>
-                          <Button onClick={() => { clearError(); setIsAddDialogOpen(true); }}>
+          <Button
+            onClick={() => {
+              clearError();
+              setIsAddDialogOpen(true);
+            }}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Agregar Categoría
           </Button>
@@ -345,7 +351,7 @@ export default function CategoriesPage() {
           {loading ? (
             <div className="flex h-32 items-center justify-center">
               <div className="text-center">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                <Loader2 className="mx-auto mb-2 h-8 w-8 animate-spin" />
                 <p className="text-sm text-gray-500">
                   {categories.length === 0 ? 'Cargando categorías...' : 'Actualizando datos...'}
                 </p>
@@ -495,7 +501,7 @@ export default function CategoriesPage() {
               optimizeImage={true}
               maxWidth={800}
               maxHeight={600}
-              aspectRatio={4/3}
+              aspectRatio={4 / 3}
               showPreview={true}
               previewSize="md"
               uploadOnSelect={false} // No subir inmediatamente
@@ -581,7 +587,7 @@ export default function CategoriesPage() {
               optimizeImage={true}
               maxWidth={800}
               maxHeight={600}
-              aspectRatio={4/3}
+              aspectRatio={4 / 3}
               showPreview={true}
               previewSize="md"
               uploadOnSelect={false} // No subir inmediatamente

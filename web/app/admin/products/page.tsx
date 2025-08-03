@@ -23,7 +23,23 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, MoreHorizontal, Edit, Trash2, Eye, Package, AlertTriangle, Loader2, RefreshCw, TrendingUp, TrendingDown, CheckCircle, XCircle, Info } from 'lucide-react';
+import {
+  Plus,
+  Search,
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  Eye,
+  Package,
+  AlertTriangle,
+  Loader2,
+  RefreshCw,
+  TrendingUp,
+  TrendingDown,
+  CheckCircle,
+  XCircle,
+  Info,
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminProducts } from '@/lib/hooks/use-admin-products';
 import { useAdminCategories } from '@/lib/hooks/use-admin-categories';
@@ -78,10 +94,7 @@ export default function ProductsPage() {
   useEffect(() => {
     const loadAdditionalStats = async () => {
       try {
-        const [lowStock, outOfStock] = await Promise.all([
-          getLowStockProducts(),
-          getOutOfStockProducts(),
-        ]);
+        const [lowStock, outOfStock] = await Promise.all([getLowStockProducts(), getOutOfStockProducts()]);
         setLowStockProducts(lowStock);
         setOutOfStockProducts(outOfStock);
       } catch (error) {
@@ -206,11 +219,11 @@ export default function ProductsPage() {
   // Abrir diálogos
   const openEditDialog = async (product: AdminProduct) => {
     clearError(); // Limpiar errores previos
-    
+
     try {
       // Obtener el producto completo con imágenes y relaciones
       const completeProduct = await AdminService.getProduct(product.id);
-      
+
       if (completeProduct) {
         setSelectedProduct(completeProduct);
         setIsEditDialogOpen(true);
@@ -501,21 +514,21 @@ export default function ProductsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             className="cursor-pointer"
                             onClick={() => openViewDialog(product)}
                           >
                             <Eye className="mr-2 h-4 w-4" />
                             Ver detalles
                           </DropdownMenuItem>
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             className="cursor-pointer"
                             onClick={() => openEditDialog(product)}
                           >
                             <Edit className="mr-2 h-4 w-4" />
                             Editar
                           </DropdownMenuItem>
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             className="cursor-pointer"
                             onClick={() => openStockDialog(product)}
                           >
@@ -524,7 +537,7 @@ export default function ProductsPage() {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
-                            className="text-red-600 cursor-pointer"
+                            className="cursor-pointer text-red-600"
                             onClick={() => openDeleteDialog(product)}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
@@ -745,9 +758,7 @@ export default function ProductsPage() {
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle>Actualizar Stock</DialogTitle>
-            <DialogDescription>
-              Actualiza la cantidad de stock disponible para este producto.
-            </DialogDescription>
+            <DialogDescription>Actualiza la cantidad de stock disponible para este producto.</DialogDescription>
           </DialogHeader>
           {selectedProduct && (
             <div className="space-y-4">

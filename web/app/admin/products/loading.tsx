@@ -15,7 +15,7 @@ export default function ProductsLoading() {
       {/* Header */}
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <Skeleton className="h-8 w-64 mb-2" />
+          <Skeleton className="mb-2 h-8 w-64" />
           <Skeleton className="h-4 w-80" />
         </div>
         <div className="flex space-x-2">

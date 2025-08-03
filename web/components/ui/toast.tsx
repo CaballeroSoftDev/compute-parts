@@ -15,10 +15,7 @@ const ToastViewport = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Viewport
     ref={ref}
-    className={cn(
-      'fixed top-4 right-4 z-[100] flex max-h-screen w-full max-w-[420px] flex-col gap-2',
-      className
-    )}
+    className={cn('fixed right-4 top-4 z-[100] flex max-h-screen w-full max-w-[420px] flex-col gap-2', className)}
     {...props}
   />
 ));
@@ -78,7 +75,7 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      'absolute right-2 top-2 rounded-full p-1.5 text-gray-400 opacity-70 transition-all hover:opacity-100 hover:bg-gray-100 hover:text-gray-600 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-gray-300 group-[.destructive]:text-red-400 group-[.destructive]:hover:bg-red-100 group-[.destructive]:hover:text-red-600 group-[.success]:text-green-400 group-[.success]:hover:bg-green-100 group-[.success]:hover:text-green-600 group-[.warning]:text-yellow-400 group-[.warning]:hover:bg-yellow-100 group-[.warning]:hover:text-yellow-600 group-[.info]:text-blue-400 group-[.info]:hover:bg-blue-100 group-[.info]:hover:text-blue-600',
+      'absolute right-2 top-2 rounded-full p-1.5 text-gray-400 opacity-70 transition-all hover:bg-gray-100 hover:text-gray-600 hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-gray-300 group-[.destructive]:text-red-400 group-[.info]:text-blue-400 group-[.success]:text-green-400 group-[.warning]:text-yellow-400 group-[.destructive]:hover:bg-red-100 group-[.info]:hover:bg-blue-100 group-[.success]:hover:bg-green-100 group-[.warning]:hover:bg-yellow-100 group-[.destructive]:hover:text-red-600 group-[.info]:hover:text-blue-600 group-[.success]:hover:text-green-600 group-[.warning]:hover:text-yellow-600',
       className
     )}
     toast-close=""
@@ -107,7 +104,7 @@ const ToastDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Description
     ref={ref}
-    className={cn('text-sm opacity-80 leading-relaxed', className)}
+    className={cn('text-sm leading-relaxed opacity-80', className)}
     {...props}
   />
 ));

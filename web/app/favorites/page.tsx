@@ -5,10 +5,12 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Heart, ShoppingCart, Trash2 } from 'lucide-react';
 import { useFavorites } from '@/lib/favorites-context';
+import { useToast } from '@/hooks/use-toast';
 import { MainLayout } from '@/components/layout/MainLayout';
 
 export default function FavoritesPage() {
-  const { favorites, removeFromFavorites, clearFavorites, favoritesCount } = useFavorites();
+  const { favorites, removeFromFavorites, clearFavorites, favoritesCount, loading } = useFavorites();
+  const { toast } = useToast();
 
   return (
     <MainLayout>
@@ -26,7 +28,25 @@ export default function FavoritesPage() {
           {favoritesCount > 0 && (
             <Button
               variant="outline"
-              onClick={clearFavorites}
+              onClick={async () => {
+                try {
+                  const success = await clearFavorites();
+                  if (success) {
+                    toast({
+                      title: 'Favoritos limpiados',
+                      description: 'Se eliminaron todos tus favoritos',
+                      variant: 'default',
+                    });
+                  }
+                } catch (error) {
+                  console.error('Error clearing favorites:', error);
+                  toast({
+                    title: 'Error',
+                    description: 'No se pudieron limpiar los favoritos',
+                    variant: 'destructive',
+                  });
+                }
+              }}
               className="border-red-200 bg-transparent text-red-600 hover:border-red-300 hover:bg-red-50"
             >
               <Trash2 className="mr-2 h-4 w-4" />
@@ -35,7 +55,14 @@ export default function FavoritesPage() {
           )}
         </div>
 
-        {favorites.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center">
+              <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-[#007BFF]"></div>
+              <p className="text-gray-600">Cargando favoritos...</p>
+            </div>
+          </div>
+        ) : favorites.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="mb-4 rounded-full bg-gray-100 p-6">
               <Heart className="h-12 w-12 text-gray-400" />
@@ -73,10 +100,26 @@ export default function FavoritesPage() {
                     variant="ghost"
                     size="icon"
                     className="absolute right-2 top-2 z-20 rounded-full bg-white/80 text-red-500 backdrop-blur-sm hover:text-red-700"
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      removeFromFavorites(product.id);
+                      try {
+                        const success = await removeFromFavorites(product.id);
+                        if (success) {
+                          toast({
+                            title: 'Eliminado de favoritos',
+                            description: `${product.name} se eliminó de tus favoritos`,
+                            variant: 'default',
+                          });
+                        }
+                      } catch (error) {
+                        console.error('Error removing from favorites:', error);
+                        toast({
+                          title: 'Error',
+                          description: 'No se pudo eliminar de favoritos',
+                          variant: 'destructive',
+                        });
+                      }
                     }}
                     aria-label="Eliminar de favoritos"
                   >
@@ -89,7 +132,10 @@ export default function FavoritesPage() {
                   <h3 className="mb-1 line-clamp-2 text-sm font-medium text-black">{product.name}</h3>
                   <p className="mb-2 text-xs text-gray-500">{product.brand}</p>
                   <div className="flex items-center justify-between">
-                    <p className="font-bold text-black">MX${product.price.toLocaleString()}</p>
+                    <p className="font-bold text-black">
+                      MX$
+                      {(typeof product.price === 'string' ? parseFloat(product.price) : product.price).toLocaleString()}
+                    </p>
                     <Button
                       size="sm"
                       className="z-20 h-8 bg-[#007BFF] px-3 hover:bg-[#0056b3]"

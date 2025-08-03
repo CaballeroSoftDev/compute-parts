@@ -1,7 +1,7 @@
 export interface CatalogProduct {
   id: string;
   name: string;
-  price: number;
+  price: number | string;
   brand: string;
   category: string;
   image: string;

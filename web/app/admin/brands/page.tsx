@@ -58,6 +58,10 @@ export default function BrandsPage() {
     is_active: true,
   });
 
+  // Estados para archivos temporales
+  const [tempLogoFile, setTempLogoFile] = useState<File | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string>('');
+
   // Estados para filtros
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -74,7 +78,11 @@ export default function BrandsPage() {
     setFormLoading(true);
 
     try {
-      await createBrand(formData);
+      // Pasar el archivo temporal al servicio
+      await createBrand({
+        ...formData,
+        logo_file: tempLogoFile || undefined,
+      });
       setIsAddDialogOpen(false);
       setFormData({
         name: '',
@@ -82,6 +90,8 @@ export default function BrandsPage() {
         website: '',
         is_active: true,
       });
+      setTempLogoFile(null);
+      setLogoUrl('');
       toast({
         title: 'Marca creada',
         description: 'La marca se ha creado exitosamente',
@@ -104,7 +114,11 @@ export default function BrandsPage() {
 
     setFormLoading(true);
     try {
-      await updateBrand(selectedBrand.id, formData);
+      // Pasar el archivo temporal al servicio
+      await updateBrand(selectedBrand.id, {
+        ...formData,
+        logo_file: tempLogoFile || undefined,
+      });
       setIsEditDialogOpen(false);
       setSelectedBrand(null);
       setFormData({
@@ -113,6 +127,8 @@ export default function BrandsPage() {
         website: '',
         is_active: true,
       });
+      setTempLogoFile(null);
+      setLogoUrl('');
       toast({
         title: 'Marca actualizada',
         description: 'La marca se ha actualizado exitosamente',
@@ -180,6 +196,8 @@ export default function BrandsPage() {
       website: brand.website || '',
       is_active: brand.is_active,
     });
+    setTempLogoFile(null);
+    setLogoUrl(brand.logo_url || '');
     setIsEditDialogOpen(true);
   };
 
@@ -193,13 +211,18 @@ export default function BrandsPage() {
     setIsViewDialogOpen(true);
   };
 
+  // Manejador para cambios de archivo temporal
+  const handleLogoFileChange = (file: File | null) => {
+    setTempLogoFile(file);
+  };
+
   if (error && !loading) {
     return (
       <div className="flex h-64 items-center justify-center">
         <div className="text-center">
           <Building2 className="mx-auto mb-4 h-12 w-12 text-red-500" />
           <h3 className="text-lg font-semibold text-gray-900">Error al cargar marcas</h3>
-          <p className="text-gray-500 max-w-md">{error}</p>
+          <p className="max-w-md text-gray-500">{error}</p>
           <div className="mt-4 space-x-2">
             <Button
               onClick={handleRefresh}
@@ -253,7 +276,12 @@ export default function BrandsPage() {
             <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             {loading ? 'Actualizando...' : 'Actualizar'}
           </Button>
-          <Button onClick={() => { clearError(); setIsAddDialogOpen(true); }}>
+          <Button
+            onClick={() => {
+              clearError();
+              setIsAddDialogOpen(true);
+            }}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Agregar Marca
           </Button>
@@ -329,7 +357,7 @@ export default function BrandsPage() {
           {loading ? (
             <div className="flex h-32 items-center justify-center">
               <div className="text-center">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                <Loader2 className="mx-auto mb-2 h-8 w-8 animate-spin" />
                 <p className="text-sm text-gray-500">
                   {brands.length === 0 ? 'Cargando marcas...' : 'Actualizando datos...'}
                 </p>
@@ -351,6 +379,13 @@ export default function BrandsPage() {
                   <TableRow key={brand.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center space-x-3">
+                        {brand.logo_url && (
+                          <img
+                            src={brand.logo_url}
+                            alt={brand.name}
+                            className="h-10 w-10 rounded-md object-contain"
+                          />
+                        )}
                         <div>
                           <div className="font-medium">{brand.name}</div>
                           {brand.products_count !== undefined && (
@@ -471,6 +506,24 @@ export default function BrandsPage() {
                 placeholder="https://www.marca.com"
               />
             </div>
+
+            <ImageUpload
+              label="Logo de la marca"
+              value={logoUrl}
+              onChange={(url) => setLogoUrl(url)}
+              uploadType="brand"
+              showOptimization={true}
+              optimizeImage={true}
+              maxWidth={400}
+              maxHeight={400}
+              aspectRatio={1 / 1}
+              showPreview={true}
+              previewSize="md"
+              uploadOnSelect={false} // No subir inmediatamente
+              selectedFile={tempLogoFile}
+              onFileChange={handleLogoFileChange}
+            />
+
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="is_active"
@@ -483,7 +536,11 @@ export default function BrandsPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setIsAddDialogOpen(false)}
+                onClick={() => {
+                  setIsAddDialogOpen(false);
+                  setTempLogoFile(null);
+                  setLogoUrl('');
+                }}
               >
                 Cancelar
               </Button>
@@ -539,6 +596,24 @@ export default function BrandsPage() {
                 onChange={(e) => setFormData({ ...formData, website: e.target.value })}
               />
             </div>
+
+            <ImageUpload
+              label="Logo de la marca"
+              value={selectedBrand?.logo_url || logoUrl}
+              onChange={(url) => setLogoUrl(url)}
+              uploadType="brand"
+              showOptimization={true}
+              optimizeImage={true}
+              maxWidth={400}
+              maxHeight={400}
+              aspectRatio={1 / 1}
+              showPreview={true}
+              previewSize="md"
+              uploadOnSelect={false} // No subir inmediatamente
+              selectedFile={tempLogoFile}
+              onFileChange={handleLogoFileChange}
+            />
+
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="edit-is_active"
@@ -551,7 +626,11 @@ export default function BrandsPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setIsEditDialogOpen(false)}
+                onClick={() => {
+                  setIsEditDialogOpen(false);
+                  setTempLogoFile(null);
+                  setLogoUrl('');
+                }}
               >
                 Cancelar
               </Button>
@@ -578,6 +657,13 @@ export default function BrandsPage() {
           {selectedBrand && (
             <div className="space-y-4">
               <div className="flex items-center space-x-4">
+                {selectedBrand.logo_url && (
+                  <img
+                    src={selectedBrand.logo_url}
+                    alt={selectedBrand.name}
+                    className="h-20 w-20 rounded-md object-contain"
+                  />
+                )}
                 <div>
                   <h3 className="text-lg font-medium">{selectedBrand.name}</h3>
                   {selectedBrand.products_count !== undefined && (
@@ -596,7 +682,6 @@ export default function BrandsPage() {
                     )}
                   </div>
                 </div>
-
               </div>
               {selectedBrand.description && (
                 <div>
@@ -657,6 +742,13 @@ export default function BrandsPage() {
           </DialogHeader>
           {selectedBrand && (
             <div className="flex items-center space-x-3 py-4">
+              {selectedBrand.logo_url && (
+                <img
+                  src={selectedBrand.logo_url}
+                  alt={selectedBrand.name}
+                  className="h-12 w-12 rounded-md object-contain"
+                />
+              )}
               <div>
                 <p className="font-medium">{selectedBrand.name}</p>
                 {selectedBrand.products_count !== undefined && (

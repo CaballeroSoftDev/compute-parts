@@ -50,35 +50,37 @@ export function useAdminProducts(): UseAdminProductsReturn {
 
     try {
       if (!isMountedRef.current) return;
-      
+
       setLoading(true);
       setError(null);
-      
+
       // Timeout de 10 segundos para la request
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Timeout: La solicitud tardó demasiado')), 10000);
       });
 
       const dataPromise = AdminService.getProducts(filters, pagination.page, pagination.limit);
-      
-      const response = await Promise.race([dataPromise, timeoutPromise]) as Awaited<ReturnType<typeof AdminService.getProducts>>;
-      
+
+      const response = (await Promise.race([dataPromise, timeoutPromise])) as Awaited<
+        ReturnType<typeof AdminService.getProducts>
+      >;
+
       if (!isMountedRef.current) return;
-      
+
       setProducts(response.data);
       setPagination(response.pagination);
     } catch (err) {
       if (!isMountedRef.current) return;
-      
+
       // Ignorar errores de abort
       if (err instanceof Error && err.name === 'AbortError') {
         return;
       }
-      
+
       const errorMessage = err instanceof Error ? err.message : 'Error al cargar productos';
       setError(errorMessage);
       console.error('Error fetching products:', err);
-      
+
       // Si es un error de timeout o red, ofrecer reintento automático
       if (errorMessage.includes('Timeout') || errorMessage.includes('fetch')) {
         setTimeout(() => {

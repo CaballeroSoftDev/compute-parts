@@ -10,7 +10,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, CheckCircle2, User, Mail, Phone, Calendar, MapPin, Camera, Edit3, Save, X, Loader2 } from 'lucide-react';
+import {
+  AlertCircle,
+  CheckCircle2,
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  MapPin,
+  Camera,
+  Edit3,
+  Save,
+  X,
+  Loader2,
+} from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -111,21 +124,21 @@ export default function ProfilePage() {
     setIsUploadingAvatar(true);
     try {
       const result = await UploadService.uploadUserAvatar(selectedAvatarFile, user.id);
-      
+
       if (result.error) {
         throw new Error(result.error);
       }
 
       // Actualizar perfil con nueva URL de avatar
       const { error } = await updateProfile({ avatar_url: result.url });
-      
+
       if (error) {
         throw error;
       }
 
       setAvatarPreview(null);
       setSelectedAvatarFile(null);
-      
+
       toast({
         title: 'Avatar actualizado',
         description: 'Tu foto de perfil se ha actualizado correctamente',
@@ -180,8 +193,8 @@ export default function ProfilePage() {
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
+    setFormData((prev) => ({ ...prev, [field]: value }));
+
     // Validar en tiempo real
     let error = '';
     switch (field) {
@@ -207,8 +220,8 @@ export default function ProfilePage() {
         error = validatePostalCode(value);
         break;
     }
-    
-    setErrors(prev => ({ ...prev, [field]: error }));
+
+    setErrors((prev) => ({ ...prev, [field]: error }));
   };
 
   const validatePersonalInfo = (): boolean => {
@@ -218,9 +231,9 @@ export default function ProfilePage() {
       phone: validatePhone(formData.phone),
     };
 
-    setErrors(prev => ({ ...prev, ...newErrors }));
+    setErrors((prev) => ({ ...prev, ...newErrors }));
 
-    return !Object.values(newErrors).some(error => error !== '');
+    return !Object.values(newErrors).some((error) => error !== '');
   };
 
   const handleSavePersonalInfo = async () => {
@@ -239,14 +252,14 @@ export default function ProfilePage() {
         last_name: formData.last_name.trim(),
         phone: formData.phone.trim(),
       });
-      
+
       if (error) {
         throw error;
       }
 
       setIsEditingPersonal(false);
       setSuccess('Información personal actualizada exitosamente');
-      
+
       toast({
         title: 'Información actualizada',
         description: 'Tu información personal se ha guardado correctamente',
@@ -270,9 +283,9 @@ export default function ProfilePage() {
       postal_code: validatePostalCode(formData.postal_code),
     };
 
-    setErrors(prev => ({ ...prev, ...newErrors }));
+    setErrors((prev) => ({ ...prev, ...newErrors }));
 
-    return !Object.values(newErrors).some(error => error !== '');
+    return !Object.values(newErrors).some((error) => error !== '');
   };
 
   const handleSaveAddress = async () => {
@@ -293,14 +306,14 @@ export default function ProfilePage() {
         postal_code: formData.postal_code.trim(),
         country: 'México', // Siempre México
       });
-      
+
       if (error) {
         throw error;
       }
 
       setIsEditingAddress(false);
       setSuccess('Dirección actualizada exitosamente');
-      
+
       toast({
         title: 'Dirección actualizada',
         description: 'Tu dirección se ha guardado correctamente',
@@ -319,7 +332,7 @@ export default function ProfilePage() {
   const handleCancelPersonalEdit = () => {
     setIsEditingPersonal(false);
     // Limpiar errores de información personal
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
       first_name: '',
       last_name: '',
@@ -327,7 +340,7 @@ export default function ProfilePage() {
     }));
     // Restaurar datos originales de información personal
     if (profile) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         first_name: profile.first_name || '',
         last_name: profile.last_name || '',
@@ -339,7 +352,7 @@ export default function ProfilePage() {
   const handleCancelAddressEdit = () => {
     setIsEditingAddress(false);
     // Limpiar errores de dirección
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
       address: '',
       city: '',
@@ -348,7 +361,7 @@ export default function ProfilePage() {
     }));
     // Restaurar datos originales de dirección
     if (profile) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         address: profile.address || '',
         city: profile.city || '',
@@ -363,7 +376,7 @@ export default function ProfilePage() {
     const firstName = profile?.first_name || user?.user_metadata?.first_name || '';
     const lastName = profile?.last_name || user?.user_metadata?.last_name || '';
     const email = user?.email || '';
-    
+
     if (firstName && lastName) {
       return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
     }
@@ -379,7 +392,7 @@ export default function ProfilePage() {
   const getFullName = () => {
     const firstName = profile?.first_name || user?.user_metadata?.first_name || '';
     const lastName = profile?.last_name || user?.user_metadata?.last_name || '';
-    
+
     if (firstName && lastName) {
       return `${firstName} ${lastName}`;
     }
@@ -452,7 +465,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      
+
       <main className="py-8">
         <div className="mx-auto max-w-4xl px-4">
           {/* Título de la página */}
@@ -462,7 +475,10 @@ export default function ProfilePage() {
           </div>
 
           {error && (
-            <Alert variant="destructive" className="mb-6">
+            <Alert
+              variant="destructive"
+              className="mb-6"
+            >
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
@@ -477,80 +493,78 @@ export default function ProfilePage() {
                   <CardDescription>Personaliza tu foto de perfil</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                                     {/* Avatar */}
-                   <div className="flex justify-center">
-                     <div className="relative">
-                       <Avatar className="h-32 w-32">
-                         <AvatarImage 
-                           src={avatarPreview || profile?.avatar_url || undefined} 
-                           alt="Foto de perfil"
-                         />
-                         <AvatarFallback className="text-2xl font-semibold">
-                           {getInitials()}
-                         </AvatarFallback>
-                       </Avatar>
-                       
-                       {/* Botón de editar avatar */}
-                       <Button
-                         size="sm"
-                         variant="outline"
-                         className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
-                         onClick={() => document.getElementById('avatar-input')?.click()}
-                         disabled={isUploadingAvatar}
-                       >
-                         <Camera className="h-4 w-4" />
-                       </Button>
-                       
-                       <input
-                         id="avatar-input"
-                         type="file"
-                         accept="image/*"
-                         onChange={handleAvatarSelect}
-                         className="hidden"
-                       />
-                     </div>
-                   </div>
+                  {/* Avatar */}
+                  <div className="flex justify-center">
+                    <div className="relative">
+                      <Avatar className="h-32 w-32">
+                        <AvatarImage
+                          src={avatarPreview || profile?.avatar_url || undefined}
+                          alt="Foto de perfil"
+                        />
+                        <AvatarFallback className="text-2xl font-semibold">{getInitials()}</AvatarFallback>
+                      </Avatar>
 
-                   {/* Botones de acción para nueva imagen */}
-                   {avatarPreview && (
-                     <div className="space-y-3">
-                       <div className="text-center">
-                         <p className="text-sm text-gray-600 mb-2">Nueva imagen seleccionada</p>
-                         <div className="flex gap-2 justify-center">
-                           <Button
-                             size="sm"
-                             onClick={handleAvatarUpload}
-                             disabled={isUploadingAvatar}
-                             className="flex-1 max-w-[120px]"
-                           >
-                             {isUploadingAvatar ? (
-                               <>
-                                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                 Subiendo...
-                               </>
-                             ) : (
-                               <>
-                                 <Save className="h-4 w-4 mr-2" />
-                                 Guardar
-                               </>
-                             )}
-                           </Button>
-                           <Button
-                             size="sm"
-                             variant="outline"
-                             onClick={() => {
-                               setAvatarPreview(null);
-                               setSelectedAvatarFile(null);
-                             }}
-                             className="max-w-[120px]"
-                           >
-                             <X className="h-4 w-4 mr-2" />
-                             Cancelar
-                           </Button>
-                         </div>
-                       </div>
-                     </div>
-                   )}
+                      {/* Botón de editar avatar */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
+                        onClick={() => document.getElementById('avatar-input')?.click()}
+                        disabled={isUploadingAvatar}
+                      >
+                        <Camera className="h-4 w-4" />
+                      </Button>
+
+                      <input
+                        id="avatar-input"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarSelect}
+                        className="hidden"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Botones de acción para nueva imagen */}
+                  {avatarPreview && (
+                    <div className="space-y-3">
+                      <div className="text-center">
+                        <p className="mb-2 text-sm text-gray-600">Nueva imagen seleccionada</p>
+                        <div className="flex justify-center gap-2">
+                          <Button
+                            size="sm"
+                            onClick={handleAvatarUpload}
+                            disabled={isUploadingAvatar}
+                            className="max-w-[120px] flex-1"
+                          >
+                            {isUploadingAvatar ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Subiendo...
+                              </>
+                            ) : (
+                              <>
+                                <Save className="mr-2 h-4 w-4" />
+                                Guardar
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setAvatarPreview(null);
+                              setSelectedAvatarFile(null);
+                            }}
+                            className="max-w-[120px]"
+                          >
+                            <X className="mr-2 h-4 w-4" />
+                            Cancelar
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Información básica */}
                   <Separator />
@@ -559,7 +573,7 @@ export default function ProfilePage() {
                       <Label className="text-sm font-medium text-gray-700">Nombre completo</Label>
                       <p className="text-lg font-semibold">{getFullName()}</p>
                     </div>
-                    
+
                     <div>
                       <Label className="text-sm font-medium text-gray-700">Correo electrónico</Label>
                       <p className="text-sm text-gray-600">{user?.email}</p>
@@ -577,7 +591,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Columna derecha - Información detallada */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="space-y-6 lg:col-span-2">
               {/* Información Personal */}
               <Card>
                 <CardHeader>
@@ -594,88 +608,88 @@ export default function ProfilePage() {
                       size="sm"
                       onClick={() => setIsEditingPersonal(!isEditingPersonal)}
                     >
-                      <Edit3 className="h-4 w-4 mr-2" />
+                      <Edit3 className="mr-2 h-4 w-4" />
                       {isEditingPersonal ? 'Cancelar' : 'Editar'}
                     </Button>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                         <div className="space-y-2">
-                       <Label htmlFor="first_name">Nombre</Label>
-                       {isEditingPersonal ? (
-                         <div>
-                           <Input
-                             id="first_name"
-                             value={formData.first_name}
-                             onChange={(e) => handleInputChange('first_name', e.target.value)}
-                             placeholder="Tu nombre"
-                             className={errors.first_name ? 'border-red-500' : ''}
-                           />
-                           {errors.first_name && (
-                             <p className="text-sm text-red-500 mt-1">{errors.first_name}</p>
-                           )}
-                         </div>
-                       ) : (
-                         <div className="rounded-md border bg-gray-50 p-3">
-                           {profile?.first_name || 'No especificado'}
-                         </div>
-                       )}
-                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="first_name">Nombre</Label>
+                      {isEditingPersonal ? (
+                        <div>
+                          <Input
+                            id="first_name"
+                            value={formData.first_name}
+                            onChange={(e) => handleInputChange('first_name', e.target.value)}
+                            placeholder="Tu nombre"
+                            className={errors.first_name ? 'border-red-500' : ''}
+                          />
+                          {errors.first_name && <p className="mt-1 text-sm text-red-500">{errors.first_name}</p>}
+                        </div>
+                      ) : (
+                        <div className="rounded-md border bg-gray-50 p-3">
+                          {profile?.first_name || 'No especificado'}
+                        </div>
+                      )}
+                    </div>
 
-                     <div className="space-y-2">
-                       <Label htmlFor="last_name">Apellido</Label>
-                       {isEditingPersonal ? (
-                         <div>
-                           <Input
-                             id="last_name"
-                             value={formData.last_name}
-                             onChange={(e) => handleInputChange('last_name', e.target.value)}
-                             placeholder="Tu apellido"
-                             className={errors.last_name ? 'border-red-500' : ''}
-                           />
-                           {errors.last_name && (
-                             <p className="text-sm text-red-500 mt-1">{errors.last_name}</p>
-                           )}
-                         </div>
-                       ) : (
-                         <div className="rounded-md border bg-gray-50 p-3">
-                           {profile?.last_name || 'No especificado'}
-                         </div>
-                       )}
-                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="last_name">Apellido</Label>
+                      {isEditingPersonal ? (
+                        <div>
+                          <Input
+                            id="last_name"
+                            value={formData.last_name}
+                            onChange={(e) => handleInputChange('last_name', e.target.value)}
+                            placeholder="Tu apellido"
+                            className={errors.last_name ? 'border-red-500' : ''}
+                          />
+                          {errors.last_name && <p className="mt-1 text-sm text-red-500">{errors.last_name}</p>}
+                        </div>
+                      ) : (
+                        <div className="rounded-md border bg-gray-50 p-3">
+                          {profile?.last_name || 'No especificado'}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                                     <div className="space-y-2">
-                     <Label htmlFor="phone">Teléfono</Label>
-                     {isEditingPersonal ? (
-                       <div>
-                         <Input
-                           id="phone"
-                           value={formData.phone}
-                           onChange={(e) => handleInputChange('phone', e.target.value)}
-                           placeholder="Tu número de teléfono (10 dígitos)"
-                           className={errors.phone ? 'border-red-500' : ''}
-                         />
-                         {errors.phone && (
-                           <p className="text-sm text-red-500 mt-1">{errors.phone}</p>
-                         )}
-                       </div>
-                     ) : (
-                       <div className="flex items-center rounded-md border bg-gray-50 p-3">
-                         <Phone className="mr-2 h-4 w-4 text-gray-500" />
-                         {profile?.phone || 'No especificado'}
-                       </div>
-                     )}
-                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Teléfono</Label>
+                    {isEditingPersonal ? (
+                      <div>
+                        <Input
+                          id="phone"
+                          value={formData.phone}
+                          onChange={(e) => handleInputChange('phone', e.target.value)}
+                          placeholder="Tu número de teléfono (10 dígitos)"
+                          className={errors.phone ? 'border-red-500' : ''}
+                        />
+                        {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone}</p>}
+                      </div>
+                    ) : (
+                      <div className="flex items-center rounded-md border bg-gray-50 p-3">
+                        <Phone className="mr-2 h-4 w-4 text-gray-500" />
+                        {profile?.phone || 'No especificado'}
+                      </div>
+                    )}
+                  </div>
 
                   {isEditingPersonal && (
                     <div className="flex gap-2 pt-2">
-                      <Button onClick={handleSavePersonalInfo} className="flex-1">
-                        <Save className="h-4 w-4 mr-2" />
+                      <Button
+                        onClick={handleSavePersonalInfo}
+                        className="flex-1"
+                      >
+                        <Save className="mr-2 h-4 w-4" />
                         Guardar cambios
                       </Button>
-                      <Button variant="outline" onClick={handleCancelPersonalEdit}>
+                      <Button
+                        variant="outline"
+                        onClick={handleCancelPersonalEdit}
+                      >
                         Cancelar
                       </Button>
                     </div>
@@ -699,118 +713,108 @@ export default function ProfilePage() {
                       size="sm"
                       onClick={() => setIsEditingAddress(!isEditingAddress)}
                     >
-                      <Edit3 className="h-4 w-4 mr-2" />
+                      <Edit3 className="mr-2 h-4 w-4" />
                       {isEditingAddress ? 'Cancelar' : 'Editar'}
                     </Button>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                                     <div className="space-y-2">
-                     <Label htmlFor="address">Dirección</Label>
-                     {isEditingAddress ? (
-                       <div>
-                         <Textarea
-                           id="address"
-                           value={formData.address}
-                           onChange={(e) => handleInputChange('address', e.target.value)}
-                           placeholder="Tu dirección completa"
-                           rows={2}
-                           className={errors.address ? 'border-red-500' : ''}
-                         />
-                         {errors.address && (
-                           <p className="text-sm text-red-500 mt-1">{errors.address}</p>
-                         )}
-                       </div>
-                     ) : (
-                       <div className="rounded-md border bg-gray-50 p-3">
-                         {profile?.address || 'No especificada'}
-                       </div>
-                     )}
-                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Dirección</Label>
+                    {isEditingAddress ? (
+                      <div>
+                        <Textarea
+                          id="address"
+                          value={formData.address}
+                          onChange={(e) => handleInputChange('address', e.target.value)}
+                          placeholder="Tu dirección completa"
+                          rows={2}
+                          className={errors.address ? 'border-red-500' : ''}
+                        />
+                        {errors.address && <p className="mt-1 text-sm text-red-500">{errors.address}</p>}
+                      </div>
+                    ) : (
+                      <div className="rounded-md border bg-gray-50 p-3">{profile?.address || 'No especificada'}</div>
+                    )}
+                  </div>
 
-                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                     <div className="space-y-2">
-                       <Label htmlFor="city">Ciudad</Label>
-                       {isEditingAddress ? (
-                         <div>
-                           <Input
-                             id="city"
-                             value={formData.city}
-                             onChange={(e) => handleInputChange('city', e.target.value)}
-                             placeholder="Ciudad"
-                             className={errors.city ? 'border-red-500' : ''}
-                           />
-                           {errors.city && (
-                             <p className="text-sm text-red-500 mt-1">{errors.city}</p>
-                           )}
-                         </div>
-                       ) : (
-                         <div className="rounded-md border bg-gray-50 p-3">
-                           {profile?.city || 'No especificada'}
-                         </div>
-                       )}
-                     </div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="city">Ciudad</Label>
+                      {isEditingAddress ? (
+                        <div>
+                          <Input
+                            id="city"
+                            value={formData.city}
+                            onChange={(e) => handleInputChange('city', e.target.value)}
+                            placeholder="Ciudad"
+                            className={errors.city ? 'border-red-500' : ''}
+                          />
+                          {errors.city && <p className="mt-1 text-sm text-red-500">{errors.city}</p>}
+                        </div>
+                      ) : (
+                        <div className="rounded-md border bg-gray-50 p-3">{profile?.city || 'No especificada'}</div>
+                      )}
+                    </div>
 
-                     <div className="space-y-2">
-                       <Label htmlFor="state">Estado/Provincia</Label>
-                       {isEditingAddress ? (
-                         <div>
-                           <Input
-                             id="state"
-                             value={formData.state}
-                             onChange={(e) => handleInputChange('state', e.target.value)}
-                             placeholder="Estado"
-                             className={errors.state ? 'border-red-500' : ''}
-                           />
-                           {errors.state && (
-                             <p className="text-sm text-red-500 mt-1">{errors.state}</p>
-                           )}
-                         </div>
-                       ) : (
-                         <div className="rounded-md border bg-gray-50 p-3">
-                           {profile?.state || 'No especificado'}
-                         </div>
-                       )}
-                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="state">Estado/Provincia</Label>
+                      {isEditingAddress ? (
+                        <div>
+                          <Input
+                            id="state"
+                            value={formData.state}
+                            onChange={(e) => handleInputChange('state', e.target.value)}
+                            placeholder="Estado"
+                            className={errors.state ? 'border-red-500' : ''}
+                          />
+                          {errors.state && <p className="mt-1 text-sm text-red-500">{errors.state}</p>}
+                        </div>
+                      ) : (
+                        <div className="rounded-md border bg-gray-50 p-3">{profile?.state || 'No especificado'}</div>
+                      )}
+                    </div>
 
-                     <div className="space-y-2">
-                       <Label htmlFor="postal_code">Código Postal</Label>
-                       {isEditingAddress ? (
-                         <div>
-                           <Input
-                             id="postal_code"
-                             value={formData.postal_code}
-                             onChange={(e) => handleInputChange('postal_code', e.target.value)}
-                             placeholder="Código postal (5 dígitos)"
-                             maxLength={5}
-                             className={errors.postal_code ? 'border-red-500' : ''}
-                           />
-                           {errors.postal_code && (
-                             <p className="text-sm text-red-500 mt-1">{errors.postal_code}</p>
-                           )}
-                         </div>
-                       ) : (
-                         <div className="rounded-md border bg-gray-50 p-3">
-                           {profile?.postal_code || 'No especificado'}
-                         </div>
-                       )}
-                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="postal_code">Código Postal</Label>
+                      {isEditingAddress ? (
+                        <div>
+                          <Input
+                            id="postal_code"
+                            value={formData.postal_code}
+                            onChange={(e) => handleInputChange('postal_code', e.target.value)}
+                            placeholder="Código postal (5 dígitos)"
+                            maxLength={5}
+                            className={errors.postal_code ? 'border-red-500' : ''}
+                          />
+                          {errors.postal_code && <p className="mt-1 text-sm text-red-500">{errors.postal_code}</p>}
+                        </div>
+                      ) : (
+                        <div className="rounded-md border bg-gray-50 p-3">
+                          {profile?.postal_code || 'No especificado'}
+                        </div>
+                      )}
+                    </div>
 
-                                         <div className="space-y-2">
-                       <Label htmlFor="country">País</Label>
-                       <div className="rounded-md border bg-gray-50 p-3">
-                         {profile?.country || 'México'}
-                       </div>
-                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="country">País</Label>
+                      <div className="rounded-md border bg-gray-50 p-3">{profile?.country || 'México'}</div>
+                    </div>
                   </div>
 
                   {isEditingAddress && (
                     <div className="flex gap-2 pt-2">
-                      <Button onClick={handleSaveAddress} className="flex-1">
-                        <Save className="h-4 w-4 mr-2" />
+                      <Button
+                        onClick={handleSaveAddress}
+                        className="flex-1"
+                      >
+                        <Save className="mr-2 h-4 w-4" />
                         Guardar cambios
                       </Button>
-                      <Button variant="outline" onClick={handleCancelAddressEdit}>
+                      <Button
+                        variant="outline"
+                        onClick={handleCancelAddressEdit}
+                      >
                         Cancelar
                       </Button>
                     </div>
@@ -828,35 +832,39 @@ export default function ProfilePage() {
                   <CardDescription>Detalles de tu cuenta y actividad</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                     <div className="space-y-2">
-                       <Label className="text-sm font-medium text-gray-700">Fecha de Registro</Label>
-                       <div className="rounded-md border bg-gray-50 p-3">
-                         {user?.created_at ? new Date(user.created_at).toLocaleString('es-ES', {
-                           year: 'numeric',
-                           month: '2-digit',
-                           day: '2-digit',
-                           hour: '2-digit',
-                           minute: '2-digit',
-                           hour12: true
-                         }) : 'No disponible'}
-                       </div>
-                     </div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">Fecha de Registro</Label>
+                      <div className="rounded-md border bg-gray-50 p-3">
+                        {user?.created_at
+                          ? new Date(user.created_at).toLocaleString('es-ES', {
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true,
+                            })
+                          : 'No disponible'}
+                      </div>
+                    </div>
 
-                     <div className="space-y-2">
-                       <Label className="text-sm font-medium text-gray-700">Último Acceso</Label>
-                       <div className="rounded-md border bg-gray-50 p-3">
-                         {user?.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString('es-ES', {
-                           year: 'numeric',
-                           month: '2-digit',
-                           day: '2-digit',
-                           hour: '2-digit',
-                           minute: '2-digit',
-                           hour12: true
-                         }) : 'No disponible'}
-                       </div>
-                     </div>
-                   </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">Último Acceso</Label>
+                      <div className="rounded-md border bg-gray-50 p-3">
+                        {user?.last_sign_in_at
+                          ? new Date(user.last_sign_in_at).toLocaleString('es-ES', {
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true,
+                            })
+                          : 'No disponible'}
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>

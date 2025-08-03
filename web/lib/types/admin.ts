@@ -147,42 +147,42 @@ export interface AdminOrderItem {
 
 // Tipos para formularios
 export interface CreateProductForm {
-	name: string;
-	description: string;
-	short_description: string;
-	category_id: string;
-	brand_id: string;
-	sku: string;
-	price: number;
-	compare_price?: number;
-	cost_price?: number;
-	stock_quantity: number;
-	low_stock_threshold: number;
-	weight?: number;
-	dimensions?: {
-		length?: number;
-		width?: number;
-		height?: number;
-	};
-	specifications?: Record<string, any>;
-	is_active: boolean;
-	is_featured: boolean;
-	is_bestseller: boolean;
-	meta_title?: string;
-	meta_description?: string;
-	tags?: string[];
-	images?: ProductImageForm[];
+  name: string;
+  description: string;
+  short_description: string;
+  category_id: string;
+  brand_id: string;
+  sku: string;
+  price: number;
+  compare_price?: number;
+  cost_price?: number;
+  stock_quantity: number;
+  low_stock_threshold: number;
+  weight?: number;
+  dimensions?: {
+    length?: number;
+    width?: number;
+    height?: number;
+  };
+  specifications?: Record<string, any>;
+  is_active: boolean;
+  is_featured: boolean;
+  is_bestseller: boolean;
+  meta_title?: string;
+  meta_description?: string;
+  tags?: string[];
+  images?: ProductImageForm[];
 }
 
 export interface ProductImageForm {
-	id?: string;
-	url: string;
-	path: string;
-	alt_text?: string;
-	is_primary?: boolean;
-	sort_order?: number;
-	file?: File; // Archivo para subida diferida
-	isNew?: boolean; // Indica si es una imagen nueva
+  id?: string;
+  url: string;
+  path: string;
+  alt_text?: string;
+  is_primary?: boolean;
+  sort_order?: number;
+  file?: File; // Archivo para subida diferida
+  isNew?: boolean; // Indica si es una imagen nueva
 }
 
 export interface UpdateProductForm extends Partial<CreateProductForm> {
@@ -204,9 +204,13 @@ export interface CreateBrandForm {
   description?: string;
   website?: string;
   is_active: boolean;
+  logo_file?: File; // Archivo para subida de logo
 }
 
-export interface UpdateBrandForm extends Partial<CreateBrandForm> {}
+export interface UpdateBrandForm extends Partial<CreateBrandForm> {
+  logo_file?: File; // Archivo para subida de logo
+  logo_url?: string; // URL del logo
+}
 
 // Tipos para filtros y paginación
 export interface AdminFilters {

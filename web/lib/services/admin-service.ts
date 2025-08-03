@@ -1,43 +1,47 @@
 import { supabase } from '@/lib/supabase';
 import { ProductImageService } from './product-image-service';
 import { UploadService } from './upload-service';
+import { BrandLogoService } from './brand-logo-service';
 import type {
-	AdminProduct,
-	AdminCategory,
-	AdminBrand,
-	AdminUser,
-	AdminOrder,
-	CreateProductForm,
-	UpdateProductForm,
-	CreateCategoryForm,
-	UpdateCategoryForm,
-	CreateBrandForm,
-	UpdateBrandForm,
-	AdminFilters,
-	AdminListResponse,
-	AdminStats,
-	ProductImageForm,
+  AdminProduct,
+  AdminCategory,
+  AdminBrand,
+  AdminUser,
+  AdminOrder,
+  CreateProductForm,
+  UpdateProductForm,
+  CreateCategoryForm,
+  UpdateCategoryForm,
+  CreateBrandForm,
+  UpdateBrandForm,
+  AdminFilters,
+  AdminListResponse,
+  AdminStats,
+  ProductImageForm,
 } from '@/lib/types/admin';
 
 // Verificar si el usuario tiene permisos de administrador
 const checkAdminPermissions = async () => {
-	const { data: { user }, error } = await supabase.auth.getUser();
-	if (error || !user) {
-		throw new Error('Usuario no autenticado');
-	}
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+  if (error || !user) {
+    throw new Error('Usuario no autenticado');
+  }
 
-	// Verificar el rol del usuario
-	const { data: profile, error: profileError } = await supabase
-		.from('profiles')
-		.select('role')
-		.eq('id', user.id)
-		.single();
+  // Verificar el rol del usuario
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
 
-	if (profileError || !profile || !['admin', 'superadmin'].includes(profile.role)) {
-		throw new Error('No tienes permisos de administrador');
-	}
+  if (profileError || !profile || !['admin', 'superadmin'].includes(profile.role)) {
+    throw new Error('No tienes permisos de administrador');
+  }
 
-	return user;
+  return user;
 };
 
 // Clase principal para el servicio administrativo
@@ -46,7 +50,7 @@ export class AdminService {
   private static extractStoragePath(url: string, bucketName: string): string | null {
     try {
       const urlParts = url.split('/');
-      const bucketIndex = urlParts.findIndex(part => part === bucketName);
+      const bucketIndex = urlParts.findIndex((part) => part === bucketName);
       if (bucketIndex !== -1 && bucketIndex < urlParts.length - 1) {
         return urlParts.slice(bucketIndex + 1).join('/');
       }
@@ -61,31 +65,31 @@ export class AdminService {
   private static hasImageChanged(imageFile: File | null, existingImageUrl: string | null): boolean {
     // Si no hay archivo nuevo, no hay cambio
     if (!imageFile) return false;
-    
+
     // Si no hay imagen existente, es un cambio (nueva imagen)
     if (!existingImageUrl) return true;
-    
+
     // Extraer el nombre del archivo de la URL existente
     const existingFileName = existingImageUrl.split('/').pop();
     if (!existingFileName) return true;
-    
+
     // Comparar nombres de archivo directamente
     // Si el usuario selecciona el mismo archivo, tendrá el mismo nombre
     const newFileName = imageFile.name;
-    
+
     // También comparar tamaños para mayor precisión
     // Nota: No podemos obtener el tamaño del archivo existente desde la URL,
     // pero podemos asumir que si el nombre es diferente, la imagen cambió
-    
+
     // Extraer nombre base sin extensión para comparar
     const getBaseName = (fileName: string) => {
       const lastDot = fileName.lastIndexOf('.');
       return lastDot > 0 ? fileName.substring(0, lastDot) : fileName;
     };
-    
+
     const existingBaseName = getBaseName(existingFileName);
     const newBaseName = getBaseName(newFileName);
-    
+
     // Si contiene timestamp (formato: timestamp-randomstring-originalname),
     // extraer solo el nombre original
     const extractOriginalName = (fileName: string) => {
@@ -98,10 +102,10 @@ export class AdminService {
       }
       return fileName;
     };
-    
+
     const existingOriginal = extractOriginalName(existingBaseName);
     const newOriginal = newBaseName;
-    
+
     // Si los nombres originales son diferentes, la imagen ha cambiado
     return existingOriginal !== newOriginal;
   }
@@ -245,12 +249,14 @@ export class AdminService {
       const { data: product, error } = await supabase
         .from('products')
         .insert([productWithoutImages])
-        .select(`
+        .select(
+          `
           *,
           category:categories(*),
           brand:brands(*),
           images:product_images(*)
-        `)
+        `
+        )
         .single();
 
       if (error) {
@@ -274,12 +280,14 @@ export class AdminService {
           // Actualizar el producto con las imágenes
           const { data: updatedProduct } = await supabase
             .from('products')
-            .select(`
+            .select(
+              `
               *,
               category:categories(*),
               brand:brands(*),
               images:product_images(*)
-            `)
+            `
+            )
             .eq('id', product.id)
             .single();
 
@@ -300,11 +308,7 @@ export class AdminService {
       await checkAdminPermissions();
 
       // Verificar que el producto existe
-      const { data: existingProduct } = await supabase
-        .from('products')
-        .select('id')
-        .eq('id', id)
-        .single();
+      const { data: existingProduct } = await supabase.from('products').select('id').eq('id', id).single();
 
       if (!existingProduct) {
         throw new Error('Producto no encontrado');
@@ -335,12 +339,14 @@ export class AdminService {
         .from('products')
         .update(productWithoutImages)
         .eq('id', id)
-        .select(`
+        .select(
+          `
           *,
           category:categories(*),
           brand:brands(*),
           images:product_images(*)
-        `)
+        `
+        )
         .single();
 
       if (error) {
@@ -351,7 +357,7 @@ export class AdminService {
       // Sincronizar imágenes si se proporcionaron
       if (images !== undefined) {
         const syncResult = await ProductImageService.syncProductImages(id, images);
-        
+
         if (!syncResult.success && syncResult.errors.length > 0) {
           console.warn('Some image operations failed:', syncResult.errors);
         }
@@ -359,12 +365,14 @@ export class AdminService {
         // Obtener el producto actualizado con las imágenes
         const { data: updatedProduct } = await supabase
           .from('products')
-          .select(`
+          .select(
+            `
             *,
             category:categories(*),
             brand:brands(*),
             images:product_images(*)
-          `)
+          `
+          )
           .eq('id', id)
           .single();
 
@@ -386,11 +394,13 @@ export class AdminService {
       // Obtener el producto con sus imágenes ANTES de eliminar
       const { data: existingProduct, error: fetchError } = await supabase
         .from('products')
-        .select(`
+        .select(
+          `
           id,
           name,
           images:product_images(id, image_url)
-        `)
+        `
+        )
         .eq('id', id)
         .maybeSingle();
 
@@ -419,27 +429,17 @@ export class AdminService {
       }
 
       // 2. SEGUNDO: Eliminar registros de imágenes de la BD
-      await supabase
-        .from('product_images')
-        .delete()
-        .eq('product_id', id);
+      await supabase.from('product_images').delete().eq('product_id', id);
 
       // 3. TERCERO: Eliminar variantes asociadas
-      await supabase
-        .from('product_variants')
-        .delete()
-        .eq('product_id', id);
+      await supabase.from('product_variants').delete().eq('product_id', id);
 
       // 4. FINALMENTE: Eliminar el producto
-      const { error: deleteError } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', id);
+      const { error: deleteError } = await supabase.from('products').delete().eq('id', id);
 
       if (deleteError) {
         throw new Error('Error al eliminar el producto de la base de datos');
       }
-
     } catch (error) {
       console.error('Error deleting product:', error);
       throw error;
@@ -460,16 +460,13 @@ export class AdminService {
   // ===== CATEGORÍAS =====
   static async getCategories(): Promise<AdminCategory[]> {
     try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('created_at', { ascending: true });
+      const { data, error } = await supabase.from('categories').select('*').order('created_at', { ascending: true });
 
       if (error) {
         console.error('Error fetching categories:', error);
         throw new Error(`Error al cargar categorías: ${error.message}`);
       }
-      
+
       return data || [];
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -555,7 +552,7 @@ export class AdminService {
 
       // Solo procesar imagen si ha cambiado
       const imageChanged = this.hasImageChanged(imageFile || null, existingCategory.image_url);
-      
+
       if (imageChanged) {
         if (imageFile) {
           // Subir nueva imagen
@@ -570,7 +567,10 @@ export class AdminService {
             try {
               const oldImagePath = this.extractStoragePath(existingCategory.image_url, 'category-images');
               if (oldImagePath) {
-                const deleteResult = await UploadService.deleteImage(oldImagePath, UploadService.getBucketInfo('category').bucket);
+                const deleteResult = await UploadService.deleteImage(
+                  oldImagePath,
+                  UploadService.getBucketInfo('category').bucket
+                );
               }
             } catch (error) {
               console.warn('Error deleting old image:', error);
@@ -606,11 +606,7 @@ export class AdminService {
       }
 
       // Verificar que no hay productos asociados
-      const { data: productsInCategory } = await supabase
-        .from('products')
-        .select('id')
-        .eq('category_id', id)
-        .limit(1);
+      const { data: productsInCategory } = await supabase.from('products').select('id').eq('category_id', id).limit(1);
 
       if (productsInCategory && productsInCategory.length > 0) {
         throw new Error('No se puede eliminar la categoría porque tiene productos asociados');
@@ -640,16 +636,13 @@ export class AdminService {
   // ===== MARCAS =====
   static async getBrands(): Promise<AdminBrand[]> {
     try {
-      const { data, error } = await supabase
-        .from('brands')
-        .select('*')
-        .order('name', { ascending: true });
+      const { data, error } = await supabase.from('brands').select('*').order('name', { ascending: true });
 
       if (error) {
         console.error('Error fetching brands:', error);
         throw new Error(`Error al cargar marcas: ${error.message}`);
       }
-      
+
       return data || [];
     } catch (error) {
       console.error('Error fetching brands:', error);
@@ -681,10 +674,40 @@ export class AdminService {
         throw new Error('Ya existe una marca con ese nombre');
       }
 
-      const { data, error } = await supabase.from('brands').insert(brandData).select().single();
+      // Preparar datos para inserción (sin el archivo)
+      const { logo_file, ...brandDataWithoutFile } = brandData;
+
+      // Crear la marca primero
+      const { data: newBrand, error } = await supabase.from('brands').insert(brandDataWithoutFile).select().single();
 
       if (error) throw error;
-      return data;
+
+      // Si hay un archivo de logo, subirlo
+      if (logo_file) {
+        try {
+          const logoUrl = await BrandLogoService.uploadBrandLogo(logo_file, newBrand.id);
+
+          // Actualizar la marca con la URL del logo
+          const { data: updatedBrand, error: updateError } = await supabase
+            .from('brands')
+            .update({ logo_url: logoUrl })
+            .eq('id', newBrand.id)
+            .select()
+            .single();
+
+          if (updateError) {
+            console.error('Error updating brand with logo URL:', updateError);
+            // No lanzar error aquí, la marca ya se creó
+          } else {
+            return updatedBrand;
+          }
+        } catch (logoError) {
+          console.error('Error uploading brand logo:', logoError);
+          // No lanzar error aquí, la marca ya se creó
+        }
+      }
+
+      return newBrand;
     } catch (error) {
       console.error('Error creating brand:', error);
       throw error;
@@ -697,11 +720,7 @@ export class AdminService {
       await checkAdminPermissions();
 
       // Verificar que la marca existe
-      const { data: existingBrand } = await supabase
-        .from('brands')
-        .select('id')
-        .eq('id', id)
-        .single();
+      const { data: existingBrand } = await supabase.from('brands').select('id, logo_url').eq('id', id).single();
 
       if (!existingBrand) {
         throw new Error('Marca no encontrada');
@@ -724,7 +743,23 @@ export class AdminService {
         }
       }
 
-      const { data, error } = await supabase.from('brands').update(brandData).eq('id', id).select().single();
+      // Preparar datos para actualización (sin el archivo)
+      const { logo_file, ...brandDataWithoutFile } = brandData;
+
+      // Si hay un archivo de logo, manejarlo
+      if (logo_file) {
+        try {
+          const logoUrl = await BrandLogoService.updateBrandLogo(logo_file, id, existingBrand.logo_url);
+
+          // Agregar la URL del logo a los datos de actualización
+          brandDataWithoutFile.logo_url = logoUrl;
+        } catch (logoError) {
+          console.error('Error updating brand logo:', logoError);
+          throw new Error('Error al actualizar el logo de la marca');
+        }
+      }
+
+      const { data, error } = await supabase.from('brands').update(brandDataWithoutFile).eq('id', id).select().single();
 
       if (error) throw error;
       return data;
@@ -740,25 +775,27 @@ export class AdminService {
       await checkAdminPermissions();
 
       // Verificar que la marca existe
-      const { data: existingBrand } = await supabase
-        .from('brands')
-        .select('id')
-        .eq('id', id)
-        .single();
+      const { data: existingBrand } = await supabase.from('brands').select('id, logo_url').eq('id', id).single();
 
       if (!existingBrand) {
         throw new Error('Marca no encontrada');
       }
 
       // Verificar que no hay productos asociados
-      const { data: productsInBrand } = await supabase
-        .from('products')
-        .select('id')
-        .eq('brand_id', id)
-        .limit(1);
+      const { data: productsInBrand } = await supabase.from('products').select('id').eq('brand_id', id).limit(1);
 
       if (productsInBrand && productsInBrand.length > 0) {
         throw new Error('No se puede eliminar la marca porque tiene productos asociados');
+      }
+
+      // Eliminar el logo si existe
+      if (existingBrand.logo_url) {
+        try {
+          await BrandLogoService.deleteBrandLogo(existingBrand.logo_url);
+        } catch (logoError) {
+          console.error('Error deleting brand logo:', logoError);
+          // No lanzar error aquí, continuar con la eliminación de la marca
+        }
       }
 
       const { error } = await supabase.from('brands').delete().eq('id', id);
@@ -909,7 +946,7 @@ export class AdminService {
   }
 
   // ===== MÉTODOS ADICIONALES =====
-  
+
   // Obtener productos con stock bajo
   static async getLowStockProducts(): Promise<AdminProduct[]> {
     try {
@@ -917,11 +954,13 @@ export class AdminService {
 
       const { data, error } = await supabase
         .from('products')
-        .select(`
+        .select(
+          `
           *,
           category:categories(*),
           brand:brands(*)
-        `)
+        `
+        )
         .lt('stock_quantity', 10)
         .gt('stock_quantity', 0)
         .order('stock_quantity', { ascending: true });
@@ -941,11 +980,13 @@ export class AdminService {
 
       const { data, error } = await supabase
         .from('products')
-        .select(`
+        .select(
+          `
           *,
           category:categories(*),
           brand:brands(*)
-        `)
+        `
+        )
         .eq('stock_quantity', 0)
         .order('created_at', { ascending: false });
 
@@ -1075,7 +1116,10 @@ export class AdminService {
   }
 
   // Sincronizar imágenes de producto
-  static async syncProductImages(productId: string, images: ProductImageForm[]): Promise<{
+  static async syncProductImages(
+    productId: string,
+    images: ProductImageForm[]
+  ): Promise<{
     success: boolean;
     created: number;
     updated: number;

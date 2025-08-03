@@ -69,7 +69,7 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
       // Usar product.category?.id y product.brand?.id
       const categoryId = product.category?.id || '';
       const brandId = product.brand?.id || '';
-      
+
       setFormData({
         name: product.name,
         description: product.description || '',
@@ -95,15 +95,16 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
         meta_title: product.meta_title || '',
         meta_description: product.meta_description || '',
         tags: product.tags || [],
-        images: product.images?.map(img => ({
-          id: img.id,
-          url: img.image_url,
-          path: img.image_url, // Asumiendo que la URL es el path
-          alt_text: img.alt_text || undefined,
-          is_primary: img.is_primary,
-          sort_order: img.sort_order || undefined,
-          isNew: false, // Imágenes existentes no son nuevas
-        })) || [],
+        images:
+          product.images?.map((img) => ({
+            id: img.id,
+            url: img.image_url,
+            path: img.image_url, // Asumiendo que la URL es el path
+            alt_text: img.alt_text || undefined,
+            is_primary: img.is_primary,
+            sort_order: img.sort_order || undefined,
+            isNew: false, // Imágenes existentes no son nuevas
+          })) || [],
       });
     } else if (!product) {
       // Limpiar formulario cuando no hay producto (crear nuevo)
@@ -137,8 +138,6 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
     }
   }, [product?.id, categories, brands]); // ✅ Esperar categories y brands también
 
-
-
   // Generar SKU automáticamente
   const generateSku = async () => {
     if (!formData.name) {
@@ -153,29 +152,29 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
     setIsGeneratingSku(true);
     try {
       // Obtener códigos de categoría y marca si están disponibles
-      let categoryCode = "PRD";
-      let brandCode = "GEN";
-      
+      let categoryCode = 'PRD';
+      let brandCode = 'GEN';
+
       if (formData.category_id) {
-        const category = categories.find(c => c.id === formData.category_id);
+        const category = categories.find((c) => c.id === formData.category_id);
         if (category) {
           categoryCode = category.name.substring(0, 3).toUpperCase();
         }
       }
-      
+
       if (formData.brand_id) {
-        const brand = brands.find(b => b.id === formData.brand_id);
+        const brand = brands.find((b) => b.id === formData.brand_id);
         if (brand) {
           brandCode = brand.name.substring(0, 3).toUpperCase();
         }
       }
       const productCode = formData.name.substring(0, 3).toUpperCase();
       const timestamp = Date.now().toString().slice(-4);
-      
+
       const generatedSku = `${categoryCode}-${brandCode}-${productCode}-${timestamp}`;
-      
+
       handleInputChange('sku', generatedSku);
-      
+
       toast({
         title: 'SKU generado',
         description: 'Se ha generado un SKU único para el producto',
@@ -260,26 +259,26 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
     try {
       // Obtener las imágenes actuales del formulario
       const currentImages = formData.images || [];
-      
+
       // Convertir de vuelta a ProductImage para procesar
-      const productImages: ProductImage[] = currentImages.map(img => ({
+      const productImages: ProductImage[] = currentImages.map((img) => ({
         id: img.id,
         url: img.url,
         path: img.path,
         alt_text: img.alt_text,
         is_primary: img.is_primary,
         sort_order: img.sort_order,
-        isNew: img.isNew || (!img.id || img.id.startsWith('temp-')), // Usar isNew del objeto o inferir
+        isNew: img.isNew || !img.id || img.id.startsWith('temp-'), // Usar isNew del objeto o inferir
         file: img.file, // Asegurar que se incluye el archivo
       }));
 
       if (product) {
         // Actualizar producto existente
         const productId = product.id;
-        
+
         // Subir imágenes nuevas si las hay
         let finalImages = currentImages;
-        if (productImages.some(img => img.isNew)) {
+        if (productImages.some((img) => img.isNew)) {
           try {
             finalImages = await uploadNewImages(productImages, productId);
           } catch (error) {
@@ -302,7 +301,7 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
         // Crear nuevo producto
         // Ahora que preservamos los archivos correctamente, podemos procesar imágenes
         let finalImages = currentImages;
-        if (productImages.some(img => img.isNew && img.file)) {
+        if (productImages.some((img) => img.isNew && img.file)) {
           try {
             // Usar un ID temporal único para la subida
             const tempProductId = `temp-${Date.now()}`;
@@ -343,7 +342,7 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
   const handleImagesChange = (images: ProductImage[]) => {
     // Convertir ProductImage a ProductImageForm para el formulario
     // MANTENER file e isNew para preservar archivos y estado
-    const imageForms: ProductImageForm[] = images.map(img => ({
+    const imageForms: ProductImageForm[] = images.map((img) => ({
       id: img.id,
       url: img.url,
       path: img.path,
@@ -353,8 +352,8 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
       file: img.file, // ✅ Preservar archivo
       isNew: img.isNew, // ✅ Preservar estado de nueva imagen
     }));
-    
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
       images: imageForms,
     }));
@@ -363,17 +362,17 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
   // Función para subir imágenes nuevas al servidor
   const uploadNewImages = async (images: ProductImage[], productId: string): Promise<ProductImageForm[]> => {
     const uploadedImages: ProductImageForm[] = [];
-    
+
     for (const image of images) {
       if (image.isNew && image.file) {
         try {
           // Subir imagen al servidor
           const result = await UploadService.uploadProductImage(image.file, productId);
-          
+
           if (result.error) {
             throw new Error(`Error al subir imagen: ${result.error}`);
           }
-          
+
           // Agregar imagen subida a la lista
           uploadedImages.push({
             id: undefined, // Se asignará desde la base de datos
@@ -399,14 +398,14 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
         });
       }
     }
-    
+
     return uploadedImages;
   };
 
   const getStockStatus = () => {
     const stock = formData.stock_quantity || 0;
     const threshold = formData.low_stock_threshold || 5;
-    
+
     if (stock === 0) return { status: 'Agotado', color: 'bg-red-100 text-red-800' };
     if (stock <= threshold) return { status: 'Stock Bajo', color: 'bg-yellow-100 text-yellow-800' };
     return { status: 'En Stock', color: 'bg-green-100 text-green-800' };
@@ -462,9 +461,7 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
                     onValueChange={(value) => handleInputChange('category_id', value)}
                   >
                     <SelectTrigger className={errors.category_id ? 'border-red-500' : ''}>
-                      <SelectValue 
-                        placeholder="Seleccionar categoría"
-                      />
+                      <SelectValue placeholder="Seleccionar categoría" />
                     </SelectTrigger>
                     <SelectContent>
                       {categories.map((category) => (
@@ -490,9 +487,7 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
                     onValueChange={(value) => handleInputChange('brand_id', value)}
                   >
                     <SelectTrigger className={errors.brand_id ? 'border-red-500' : ''}>
-                      <SelectValue 
-                        placeholder="Seleccionar marca"
-                      />
+                      <SelectValue placeholder="Seleccionar marca" />
                     </SelectTrigger>
                     <SelectContent>
                       {brands.map((brand) => (
@@ -507,7 +502,7 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
                   </Select>
                   {errors.brand_id && <p className="text-sm text-red-500">{errors.brand_id}</p>}
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="sku">SKU *</Label>
                   <div className="flex space-x-2">
@@ -542,44 +537,46 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
                 />
               </div>
 
-              				<div className="space-y-2">
-					<Label htmlFor="short_description">Descripción Corta</Label>
-					<Textarea
-						id="short_description"
-						value={formData.short_description}
-						onChange={(e) => handleInputChange('short_description', e.target.value)}
-						placeholder="Descripción breve del producto"
-						rows={2}
-					/>
-				</div>
+              <div className="space-y-2">
+                <Label htmlFor="short_description">Descripción Corta</Label>
+                <Textarea
+                  id="short_description"
+                  value={formData.short_description}
+                  onChange={(e) => handleInputChange('short_description', e.target.value)}
+                  placeholder="Descripción breve del producto"
+                  rows={2}
+                />
+              </div>
 
-				{/* Gestión de imágenes */}
-				            <MultipleImageUpload
-              label="Imágenes del producto"
-              images={formData.images?.map(img => ({
-                id: img.id,
-                url: img.url,
-                path: img.path,
-                alt_text: img.alt_text,
-                is_primary: img.is_primary,
-                sort_order: img.sort_order,
-                file: img.file,
-                isNew: img.isNew || false,
-              })) || []}
-              onImagesChange={handleImagesChange}
-              productId={product?.id}
-              maxImages={10}
-              showOptimization={true}
-              optimizeImage={true}
-              maxWidth={1920}
-              maxHeight={1080}
-              aspectRatio={4/3}
-              showPreview={true}
-              previewSize="md"
-            />
-			</CardContent>
-		</Card>
-	</TabsContent>
+              {/* Gestión de imágenes */}
+              <MultipleImageUpload
+                label="Imágenes del producto"
+                images={
+                  formData.images?.map((img) => ({
+                    id: img.id,
+                    url: img.url,
+                    path: img.path,
+                    alt_text: img.alt_text,
+                    is_primary: img.is_primary,
+                    sort_order: img.sort_order,
+                    file: img.file,
+                    isNew: img.isNew || false,
+                  })) || []
+                }
+                onImagesChange={handleImagesChange}
+                productId={product?.id}
+                maxImages={10}
+                showOptimization={true}
+                optimizeImage={true}
+                maxWidth={1920}
+                maxHeight={1080}
+                aspectRatio={4 / 3}
+                showPreview={true}
+                previewSize="md"
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Precios y Stock */}
         <TabsContent
@@ -663,9 +660,7 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
               {/* Estado del stock */}
               <div className="flex items-center space-x-2">
                 <Label>Estado del Stock:</Label>
-                <Badge className={stockStatus.color}>
-                  {stockStatus.status}
-                </Badge>
+                <Badge className={stockStatus.color}>{stockStatus.status}</Badge>
               </div>
             </CardContent>
           </Card>
@@ -682,78 +677,78 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
               <CardDescription>Información adicional y dimensiones</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              				<div className="space-y-2">
-					<Label htmlFor="weight">Peso (kg)</Label>
-					<Input
-						id="weight"
-						type="number"
-						step="0.01"
-						value={formData.weight || 0}
-						onChange={(e) => handleInputChange('weight', parseFloat(e.target.value) || 0)}
-						placeholder="0.00"
-						className={errors.weight ? 'border-red-500' : ''}
-					/>
-					{errors.weight && <p className="text-sm text-red-500">{errors.weight}</p>}
-				</div>
+              <div className="space-y-2">
+                <Label htmlFor="weight">Peso (kg)</Label>
+                <Input
+                  id="weight"
+                  type="number"
+                  step="0.01"
+                  value={formData.weight || 0}
+                  onChange={(e) => handleInputChange('weight', parseFloat(e.target.value) || 0)}
+                  placeholder="0.00"
+                  className={errors.weight ? 'border-red-500' : ''}
+                />
+                {errors.weight && <p className="text-sm text-red-500">{errors.weight}</p>}
+              </div>
 
-				<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-					<div className="space-y-2">
-						<Label htmlFor="length">Largo (cm)</Label>
-						<Input
-							id="length"
-							type="number"
-							step="0.01"
-							value={formData.dimensions?.length || 0}
-							onChange={(e) =>
-								handleInputChange('dimensions', {
-									...formData.dimensions,
-									length: parseFloat(e.target.value) || 0,
-								})
-							}
-							placeholder="0.00"
-							className={errors.length ? 'border-red-500' : ''}
-						/>
-						{errors.length && <p className="text-sm text-red-500">{errors.length}</p>}
-					</div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div className="space-y-2">
+                  <Label htmlFor="length">Largo (cm)</Label>
+                  <Input
+                    id="length"
+                    type="number"
+                    step="0.01"
+                    value={formData.dimensions?.length || 0}
+                    onChange={(e) =>
+                      handleInputChange('dimensions', {
+                        ...formData.dimensions,
+                        length: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="0.00"
+                    className={errors.length ? 'border-red-500' : ''}
+                  />
+                  {errors.length && <p className="text-sm text-red-500">{errors.length}</p>}
+                </div>
 
-					<div className="space-y-2">
-						<Label htmlFor="width">Ancho (cm)</Label>
-						<Input
-							id="width"
-							type="number"
-							step="0.01"
-							value={formData.dimensions?.width || 0}
-							onChange={(e) =>
-								handleInputChange('dimensions', {
-									...formData.dimensions,
-									width: parseFloat(e.target.value) || 0,
-								})
-							}
-							placeholder="0.00"
-							className={errors.width ? 'border-red-500' : ''}
-						/>
-						{errors.width && <p className="text-sm text-red-500">{errors.width}</p>}
-					</div>
+                <div className="space-y-2">
+                  <Label htmlFor="width">Ancho (cm)</Label>
+                  <Input
+                    id="width"
+                    type="number"
+                    step="0.01"
+                    value={formData.dimensions?.width || 0}
+                    onChange={(e) =>
+                      handleInputChange('dimensions', {
+                        ...formData.dimensions,
+                        width: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="0.00"
+                    className={errors.width ? 'border-red-500' : ''}
+                  />
+                  {errors.width && <p className="text-sm text-red-500">{errors.width}</p>}
+                </div>
 
-					<div className="space-y-2">
-						<Label htmlFor="height">Alto (cm)</Label>
-						<Input
-							id="height"
-							type="number"
-							step="0.01"
-							value={formData.dimensions?.height || 0}
-							onChange={(e) =>
-								handleInputChange('dimensions', {
-									...formData.dimensions,
-									height: parseFloat(e.target.value) || 0,
-								})
-							}
-							placeholder="0.00"
-							className={errors.height ? 'border-red-500' : ''}
-						/>
-						{errors.height && <p className="text-sm text-red-500">{errors.height}</p>}
-					</div>
-				</div>
+                <div className="space-y-2">
+                  <Label htmlFor="height">Alto (cm)</Label>
+                  <Input
+                    id="height"
+                    type="number"
+                    step="0.01"
+                    value={formData.dimensions?.height || 0}
+                    onChange={(e) =>
+                      handleInputChange('dimensions', {
+                        ...formData.dimensions,
+                        height: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="0.00"
+                    className={errors.height ? 'border-red-500' : ''}
+                  />
+                  {errors.height && <p className="text-sm text-red-500">{errors.height}</p>}
+                </div>
+              </div>
 
               <div className="space-y-4">
                 <div className="flex items-center space-x-2">
