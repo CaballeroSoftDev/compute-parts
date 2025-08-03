@@ -39,6 +39,10 @@ import {
   CheckCircle,
   XCircle,
   Info,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminProducts } from '@/lib/hooks/use-admin-products';
@@ -85,6 +89,9 @@ export default function ProductsPage() {
 
   // Estados para filtros
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedBrand, setSelectedBrand] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
   // Estados para estadísticas adicionales
   const [lowStockProducts, setLowStockProducts] = useState<AdminProduct[]>([]);
@@ -114,7 +121,22 @@ export default function ProductsPage() {
     };
   }, [clearError]);
 
-  // Filtrar productos localmente (como en categorías)
+  // Aplicar filtros
+  useEffect(() => {
+    const newFilters: AdminFilters = {};
+    
+    if (searchTerm) newFilters.search = searchTerm;
+    if (selectedCategory && selectedCategory !== 'all') newFilters.category_id = selectedCategory;
+    if (selectedBrand && selectedBrand !== 'all') newFilters.brand_id = selectedBrand;
+    if (selectedStatus && selectedStatus !== 'all') {
+      if (selectedStatus === 'active') newFilters.is_active = true;
+      else if (selectedStatus === 'inactive') newFilters.is_active = false;
+    }
+
+    setFilters(newFilters);
+  }, [searchTerm, selectedCategory, selectedBrand, selectedStatus, setFilters]);
+
+  // Filtrar productos localmente para búsqueda en tiempo real
   const filteredProducts = products.filter(
     (product) =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -303,6 +325,44 @@ export default function ProductsPage() {
     }
   };
 
+  // Funciones de paginación
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= pagination.total_pages) {
+      setPage(page);
+    }
+  };
+
+  const goToFirstPage = () => goToPage(1);
+  const goToLastPage = () => goToPage(pagination.total_pages);
+  const goToPreviousPage = () => goToPage(pagination.page - 1);
+  const goToNextPage = () => goToPage(pagination.page + 1);
+
+  // Generar números de página para mostrar
+  const getPageNumbers = () => {
+    const pages = [];
+    const totalPages = pagination.total_pages;
+    const currentPage = pagination.page;
+    
+    // Mostrar máximo 5 páginas
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, currentPage + 2);
+    
+    // Ajustar si estamos cerca del inicio o final
+    if (endPage - startPage < 4) {
+      if (startPage === 1) {
+        endPage = Math.min(totalPages, startPage + 4);
+      } else {
+        startPage = Math.max(1, endPage - 4);
+      }
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
+  };
+
   if (error && !loading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -420,17 +480,58 @@ export default function ProductsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Filtros</CardTitle>
-          <CardDescription>Busca productos</CardDescription>
+          <CardDescription>Busca y filtra productos</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
-            <Input
-              placeholder="Buscar productos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+              <Input
+                placeholder="Buscar productos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger>
+                <SelectValue placeholder="Todas las categorías" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las categorías</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+              <SelectTrigger>
+                <SelectValue placeholder="Todas las marcas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las marcas</SelectItem>
+                {brands.map((brand) => (
+                  <SelectItem key={brand.id} value={brand.id}>
+                    {brand.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <SelectTrigger>
+                <SelectValue placeholder="Todos los estados" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los estados</SelectItem>
+                <SelectItem value="active">Activos</SelectItem>
+                <SelectItem value="inactive">Inactivos</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -446,7 +547,7 @@ export default function ProductsPage() {
                 <span>{products.length > 0 ? 'Actualizando datos...' : 'Cargando productos...'}</span>
               </div>
             ) : (
-              `${filteredProducts.length} productos encontrados`
+              `${pagination.total} productos encontrados`
             )}
           </CardDescription>
         </CardHeader>
@@ -456,125 +557,160 @@ export default function ProductsPage() {
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Producto</TableHead>
-                  <TableHead>Categoría</TableHead>
-                  <TableHead>Marca</TableHead>
-                  <TableHead>Precio</TableHead>
-                  <TableHead>Stock</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredProducts.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center space-x-3">
-                        <img
-                          src={getPrimaryImage(product)}
-                          alt={product.name}
-                          className="h-10 w-10 rounded-md object-cover"
-                        />
-                        <div>
-                          <div className="font-medium">{product.name}</div>
-                          <div className="text-sm text-gray-500">{product.sku}</div>
-                          {product.is_featured && (
-                            <Badge
-                              variant="secondary"
-                              className="text-xs"
-                            >
-                              Destacado
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{product.category?.name || 'Sin categoría'}</TableCell>
-                    <TableCell>{product.brand?.name || 'Sin marca'}</TableCell>
-                    <TableCell>${product.price.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <span className={getStockColor(product.stock_quantity || 0)}>
-                        {product.stock_quantity || 0} unidades
-                      </span>
-                    </TableCell>
-                    <TableCell>{getStatusBadge(product)}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            className="h-8 w-8 p-0"
-                          >
-                            <span className="sr-only">Abrir menú</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                          <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => openViewDialog(product)}
-                          >
-                            <Eye className="mr-2 h-4 w-4" />
-                            Ver detalles
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => openEditDialog(product)}
-                          >
-                            <Edit className="mr-2 h-4 w-4" />
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => openStockDialog(product)}
-                          >
-                            <Package className="mr-2 h-4 w-4" />
-                            Actualizar stock
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="cursor-pointer text-red-600"
-                            onClick={() => openDeleteDialog(product)}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Eliminar
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="rounded-md border">
+              <div className="h-[600px] overflow-auto">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-white z-10">
+                    <TableRow>
+                      <TableHead className="w-[300px]">Producto</TableHead>
+                      <TableHead className="w-[150px]">Categoría</TableHead>
+                      <TableHead className="w-[150px]">Marca</TableHead>
+                      <TableHead className="w-[100px]">Precio</TableHead>
+                      <TableHead className="w-[100px]">Stock</TableHead>
+                      <TableHead className="w-[120px]">Estado</TableHead>
+                      <TableHead className="w-[100px] text-right">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {products.map((product) => (
+                      <TableRow key={product.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center space-x-3">
+                            <img
+                              src={getPrimaryImage(product)}
+                              alt={product.name}
+                              className="h-10 w-10 rounded-md object-cover"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <div className="font-medium truncate">{product.name}</div>
+                              <div className="text-sm text-gray-500 truncate">{product.sku}</div>
+                              {product.is_featured && (
+                                <Badge
+                                  variant="secondary"
+                                  className="text-xs"
+                                >
+                                  Destacado
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="truncate">{product.category?.name || 'Sin categoría'}</TableCell>
+                        <TableCell className="truncate">{product.brand?.name || 'Sin marca'}</TableCell>
+                        <TableCell>${product.price.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <span className={getStockColor(product.stock_quantity || 0)}>
+                            {product.stock_quantity || 0} unidades
+                          </span>
+                        </TableCell>
+                        <TableCell>{getStatusBadge(product)}</TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                className="h-8 w-8 p-0"
+                              >
+                                <span className="sr-only">Abrir menú</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() => openViewDialog(product)}
+                              >
+                                <Eye className="mr-2 h-4 w-4" />
+                                Ver detalles
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() => openEditDialog(product)}
+                              >
+                                <Edit className="mr-2 h-4 w-4" />
+                                Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() => openStockDialog(product)}
+                              >
+                                <Package className="mr-2 h-4 w-4" />
+                                Actualizar stock
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="cursor-pointer text-red-600"
+                                onClick={() => openDeleteDialog(product)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Eliminar
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Paginación */}
+      {/* Paginación mejorada */}
       {pagination.total_pages > 1 && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-500">
             Mostrando {(pagination.page - 1) * pagination.limit + 1} a{' '}
             {Math.min(pagination.page * pagination.limit, pagination.total)} de {pagination.total} productos
           </div>
-          <div className="flex space-x-2">
+          <div className="flex items-center space-x-2">
             <Button
               variant="outline"
-              onClick={() => setPage(pagination.page - 1)}
+              size="sm"
+              onClick={goToFirstPage}
               disabled={pagination.page <= 1}
             >
-              Anterior
+              <ChevronsLeft className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
-              onClick={() => setPage(pagination.page + 1)}
+              size="sm"
+              onClick={goToPreviousPage}
+              disabled={pagination.page <= 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            {getPageNumbers().map((pageNum) => (
+              <Button
+                key={pageNum}
+                variant={pageNum === pagination.page ? "default" : "outline"}
+                size="sm"
+                onClick={() => goToPage(pageNum)}
+                className="w-8 h-8 p-0"
+              >
+                {pageNum}
+              </Button>
+            ))}
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToNextPage}
               disabled={pagination.page >= pagination.total_pages}
             >
-              Siguiente
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToLastPage}
+              disabled={pagination.page >= pagination.total_pages}
+            >
+              <ChevronsRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -681,6 +817,18 @@ export default function ProductsPage() {
                 <div>
                   <label className="text-sm font-medium">Descripción</label>
                   <p className="mt-1 text-sm text-gray-600">{selectedProduct.description}</p>
+                </div>
+              )}
+              {selectedProduct.tags && selectedProduct.tags.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium">Etiquetas</label>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {selectedProduct.tags.map((tag, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
               )}
               <div>

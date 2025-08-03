@@ -208,7 +208,7 @@ export function useAdminProducts(): UseAdminProductsReturn {
         abortControllerRef.current.abort();
       }
     };
-  }, []); // Dependencias vacías para evitar loops infinitos
+  }, [fetchProducts]); // Agregar fetchProducts como dependencia
 
   return {
     products,

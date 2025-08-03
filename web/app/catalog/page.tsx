@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SlidersHorizontal } from 'lucide-react';
+import { SlidersHorizontal, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useFavorites } from '@/lib/favorites-context';
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +21,10 @@ function CatalogContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Estados para paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [productsPerPage] = useState(12);
 
   const { filters, updateFilters, clearFilters } = useCatalogFilters();
   const { favorites, addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
@@ -68,6 +72,54 @@ function CatalogContent() {
 
     return matchesSearch && matchesPrice && matchesCategory && matchesBrand;
   });
+
+  // Calcular productos para la página actual
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+
+  // Resetear a la primera página cuando cambien los filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
+
+  // Funciones de paginación
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const goToFirstPage = () => goToPage(1);
+  const goToLastPage = () => goToPage(totalPages);
+  const goToPreviousPage = () => goToPage(currentPage - 1);
+  const goToNextPage = () => goToPage(currentPage + 1);
+
+  // Generar números de página para mostrar
+  const getPageNumbers = () => {
+    const pages = [];
+    const currentPageNum = currentPage;
+    
+    // Mostrar máximo 5 páginas
+    let startPage = Math.max(1, currentPageNum - 2);
+    let endPage = Math.min(totalPages, currentPageNum + 2);
+    
+    // Ajustar si estamos cerca del inicio o final
+    if (endPage - startPage < 4) {
+      if (startPage === 1) {
+        endPage = Math.min(totalPages, startPage + 4);
+      } else {
+        startPage = Math.max(1, endPage - 4);
+      }
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
+  };
 
   // Función para convertir CatalogProduct a Product
   const convertToProduct = (catalogProduct: CatalogProduct) => {
@@ -188,6 +240,11 @@ function CatalogContent() {
             <p className="text-sm text-gray-600">
               {filteredProducts.length} producto{filteredProducts.length !== 1 ? 's' : ''} encontrado
               {filteredProducts.length !== 1 ? 's' : ''}
+              {totalPages > 1 && (
+                <span className="ml-2">
+                  • Página {currentPage} de {totalPages}
+                </span>
+              )}
             </p>
             {(filters.searchTerm || filters.selectedCategories.length > 0 || filters.selectedBrands.length > 0) && (
               <Button
@@ -232,16 +289,75 @@ function CatalogContent() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    isFavorite={isFavorite(product.id)}
-                    onFavoriteClick={handleFavoriteClick}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {currentProducts.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      isFavorite={isFavorite(product.id)}
+                      onFavoriteClick={handleFavoriteClick}
+                    />
+                  ))}
+                </div>
+
+                {/* Paginación */}
+                {totalPages > 1 && (
+                  <div className="mt-8 flex items-center justify-between">
+                    <div className="text-sm text-gray-500">
+                      Mostrando {indexOfFirstProduct + 1} a {Math.min(indexOfLastProduct, filteredProducts.length)} de{' '}
+                      {filteredProducts.length} productos
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={goToFirstPage}
+                        disabled={currentPage <= 1}
+                      >
+                        <ChevronsLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={goToPreviousPage}
+                        disabled={currentPage <= 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      
+                      {getPageNumbers().map((pageNum) => (
+                        <Button
+                          key={pageNum}
+                          variant={pageNum === currentPage ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => goToPage(pageNum)}
+                          className="w-8 h-8 p-0"
+                        >
+                          {pageNum}
+                        </Button>
+                      ))}
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={goToNextPage}
+                        disabled={currentPage >= totalPages}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={goToLastPage}
+                        disabled={currentPage >= totalPages}
+                      >
+                        <ChevronsRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

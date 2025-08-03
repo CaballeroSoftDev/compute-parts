@@ -22,7 +22,7 @@ export function ProductCard({ product, isFavorite, onFavoriteClick }: ProductCar
       >
         <span className="sr-only">Ver producto</span>
       </Link>
-      <div className="relative aspect-square overflow-hidden bg-gray-100">
+      <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
         <Image
           src={ImageHelper.getValidImageUrl(product.image)}
           alt={product.name}

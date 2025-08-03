@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { UploadService } from '@/lib/services/upload-service';
 import type { AdminProduct, CreateProductForm, UpdateProductForm, ProductImageForm } from '@/lib/types/admin';
 import type { AdminCategory, AdminBrand } from '@/lib/types/admin';
+import { X, Tag } from 'lucide-react';
 
 interface ProductFormProps {
   product?: AdminProduct;
@@ -56,6 +57,7 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isGeneratingSku, setIsGeneratingSku] = useState(false);
+  const [newTag, setNewTag] = useState('');
   const { toast } = useToast();
 
   // Cargar datos del producto si estamos editando
@@ -187,6 +189,26 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
       });
     } finally {
       setIsGeneratingSku(false);
+    }
+  };
+
+  // Funciones para manejar etiquetas
+  const addTag = () => {
+    const tag = newTag.trim().toLowerCase();
+    if (tag && !formData.tags?.includes(tag)) {
+      handleInputChange('tags', [...(formData.tags || []), tag]);
+      setNewTag('');
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    handleInputChange('tags', formData.tags?.filter(tag => tag !== tagToRemove) || []);
+  };
+
+  const handleTagKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTag();
     }
   };
 
@@ -546,6 +568,51 @@ export function ProductForm({ product, categories, brands, onSubmit, onCancel, l
                   placeholder="Descripción breve del producto"
                   rows={2}
                 />
+              </div>
+
+              {/* Campo de etiquetas */}
+              <div className="space-y-2">
+                <Label htmlFor="tags">Etiquetas</Label>
+                <div className="space-y-2">
+                  <div className="flex space-x-2">
+                    <Input
+                      id="tags"
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      onKeyPress={handleTagKeyPress}
+                      placeholder="Agregar etiqueta..."
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addTag}
+                      disabled={!newTag.trim()}
+                    >
+                      <Tag className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  {formData.tags && formData.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {formData.tags.map((tag, index) => (
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className="flex items-center space-x-1"
+                        >
+                          <span>{tag}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeTag(tag)}
+                            className="ml-1 hover:text-red-500"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Gestión de imágenes */}
