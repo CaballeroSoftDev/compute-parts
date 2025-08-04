@@ -4,26 +4,27 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { OrderService, Order, CreateOrderData } from '@/lib/services/order-service';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from './use-auth';
 
-export function useOrders() {
+export function useAuthOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
 
-  // Cargar órdenes del usuario
+  // Cargar órdenes del usuario solo si está autenticado
   const loadOrders = useCallback(
     async (page = 1, limit = 10) => {
-      try {
-        // Verificar autenticación antes de intentar cargar órdenes
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        if (authError || !user) {
-          console.log('Usuario no autenticado, no se cargan órdenes');
-          setOrders([]);
-          return { orders: [], total: 0, totalPages: 0 };
-        }
+      // No cargar órdenes si el usuario no está autenticado
+      if (!user) {
+        console.log('Usuario no autenticado, no se cargan órdenes');
+        setOrders([]);
+        return { orders: [], total: 0, totalPages: 0 };
+      }
 
+      try {
         setLoading(true);
         const result = await OrderService.getUserOrders(page, limit);
         setOrders(result.orders);
@@ -43,12 +44,16 @@ export function useOrders() {
         setLoading(false);
       }
     },
-    [toast]
+    [user, toast]
   );
 
   // Crear nueva orden
   const createOrder = useCallback(
     async (orderData: CreateOrderData) => {
+      if (!user) {
+        throw new Error('Usuario no autenticado');
+      }
+
       try {
         setCreating(true);
         const newOrder = await OrderService.createOrder(orderData);
@@ -70,12 +75,16 @@ export function useOrders() {
         setCreating(false);
       }
     },
-    [toast]
+    [user, toast]
   );
 
   // Obtener orden por ID
   const getOrder = useCallback(
     async (orderId: string) => {
+      if (!user) {
+        throw new Error('Usuario no autenticado');
+      }
+
       try {
         setLoading(true);
         const order = await OrderService.getOrder(orderId);
@@ -93,12 +102,16 @@ export function useOrders() {
         setLoading(false);
       }
     },
-    [toast]
+    [user, toast]
   );
 
   // Cancelar orden
   const cancelOrder = useCallback(
     async (orderId: string, reason?: string) => {
+      if (!user) {
+        throw new Error('Usuario no autenticado');
+      }
+
       try {
         setLoading(true);
         const updatedOrder = await OrderService.cancelOrder(orderId, reason);
@@ -129,11 +142,22 @@ export function useOrders() {
         setLoading(false);
       }
     },
-    [currentOrder, toast]
+    [user, currentOrder, toast]
   );
 
   // Obtener estadísticas de órdenes
   const getOrderStats = useCallback(async () => {
+    if (!user) {
+      return {
+        total: 0,
+        pending: 0,
+        processing: 0,
+        shipped: 0,
+        completed: 0,
+        cancelled: 0,
+      };
+    }
+
     try {
       const stats = await OrderService.getOrderStats();
       return stats;
@@ -148,34 +172,28 @@ export function useOrders() {
         cancelled: 0,
       };
     }
-  }, []);
+  }, [user]);
 
   // Limpiar orden actual
   const clearCurrentOrder = useCallback(() => {
     setCurrentOrder(null);
   }, []);
 
-  // Cargar órdenes al montar el componente solo si el usuario está autenticado
+  // Cargar órdenes solo cuando el usuario esté autenticado y no esté cargando
   useEffect(() => {
-    // Verificar autenticación antes de cargar órdenes
-    const checkAuthAndLoadOrders = async () => {
-      try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        if (!error && user) {
-          loadOrders();
-        }
-      } catch (error) {
-        console.log('Usuario no autenticado, no se cargan órdenes');
-      }
-    };
-
-    checkAuthAndLoadOrders();
-  }, [loadOrders]);
+    if (user && !authLoading) {
+      loadOrders();
+    } else if (!user && !authLoading) {
+      // Limpiar órdenes si el usuario no está autenticado
+      setOrders([]);
+      setCurrentOrder(null);
+    }
+  }, [user, authLoading, loadOrders]);
 
   return {
     orders,
     currentOrder,
-    loading,
+    loading: loading || authLoading,
     creating,
     loadOrders,
     createOrder,
@@ -183,5 +201,6 @@ export function useOrders() {
     cancelOrder,
     getOrderStats,
     clearCurrentOrder,
+    isAuthenticated: !!user,
   };
-}
+} 

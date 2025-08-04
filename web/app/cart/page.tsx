@@ -12,7 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Trash2, ChevronLeft, CreditCard, Wallet, QrCode, Loader2, ShoppingCart } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useCart } from '@/lib/hooks/use-cart';
-import { useOrders } from '@/lib/hooks/use-orders';
+import { useAuthOrders } from '@/lib/hooks/use-auth-orders';
 import { PayPalButton } from '@/components/ui/paypal-button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/hooks/use-auth';
@@ -38,7 +38,7 @@ const additionalServices = [
 
 export default function CartPage() {
   const { items, loading, updateQuantity, removeFromCart, calculateTotals } = useCart();
-  const { createOrder, creating } = useOrders();
+  const { createOrder, creating } = useAuthOrders();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
 
@@ -189,46 +189,30 @@ export default function CartPage() {
     }
   };
 
-  // Si el usuario no está autenticado, mostrar mensaje
+  // Si el usuario no está autenticado, mostrar mensaje simplificado
   if (!authLoading && !user) {
     return (
       <MainLayout>
         <div className="container mx-auto px-4 py-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <div className="mb-8">
+          <div className="mx-auto max-w-md text-center">
+            <div className="mb-6">
               <ShoppingCart className="mx-auto mb-4 h-16 w-16 text-gray-400" />
               <h1 className="mb-2 text-2xl font-bold text-gray-900">Carrito de Compras</h1>
               <p className="mb-6 text-gray-600">Debes iniciar sesión para ver tu carrito de compras</p>
             </div>
 
-            <div className="rounded-lg border bg-white p-6 shadow-sm">
-              <div className="space-y-4">
-                <p className="text-gray-600">
-                  Para agregar productos a tu carrito y realizar compras, necesitas tener una cuenta.
-                </p>
-
-                <div className="flex flex-col justify-center gap-3 sm:flex-row">
-                  <Link href="/login">
-                    <Button className="w-full sm:w-auto">Iniciar Sesión</Button>
-                  </Link>
-                  <Link href="/register">
-                    <Button
-                      variant="outline"
-                      className="w-full sm:w-auto"
-                    >
-                      Crear Cuenta
-                    </Button>
-                  </Link>
-                </div>
-
-                <div className="border-t pt-4">
-                  <Link
-                    href="/catalog"
-                    className="text-sm text-blue-600 hover:text-blue-800"
-                  >
-                    ← Continuar comprando
-                  </Link>
-                </div>
+            <div className="space-y-4">
+              <Link href="/login">
+                <Button className="w-full">Iniciar Sesión</Button>
+              </Link>
+              
+              <div className="pt-4">
+                <Link
+                  href="/catalog"
+                  className="text-sm text-blue-600 hover:text-blue-800"
+                >
+                  ← Continuar comprando
+                </Link>
               </div>
             </div>
           </div>
