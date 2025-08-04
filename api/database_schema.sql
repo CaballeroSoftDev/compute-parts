@@ -515,8 +515,16 @@ FOR SELECT USING (auth.uid() = user_id OR auth.jwt() ->> 'role' IN ('admin', 'su
 
 CREATE POLICY "Users can insert own orders" ON public.orders FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+-- Política para permitir inserción desde el servidor (service role)
+CREATE POLICY "Service role can insert orders" ON public.orders 
+FOR INSERT WITH CHECK (auth.jwt() ->> 'role' = 'service_role');
+
 CREATE POLICY "Admins can update orders" ON public.orders 
 FOR UPDATE USING (auth.jwt() ->> 'role' IN ('admin', 'superadmin'));
+
+-- Política para permitir actualización desde el servidor (service role)
+CREATE POLICY "Service role can update orders" ON public.orders 
+FOR UPDATE USING (auth.jwt() ->> 'role' = 'service_role');
 
 -- Políticas para reseñas
 CREATE POLICY "Reviews are viewable by everyone" ON public.reviews FOR SELECT USING (is_approved = true);

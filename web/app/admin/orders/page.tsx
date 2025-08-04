@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -38,6 +38,7 @@ import {
   ShoppingCart,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
 
 // Tipos de datos
 interface OrderItem {
@@ -197,7 +198,7 @@ const initialOrders: Order[] = [
 ];
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
@@ -206,7 +207,90 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [newStatus, setNewStatus] = useState('');
   const [trackingNumber, setTrackingNumber] = useState('');
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+
+  // Cargar pedidos desde Supabase
+  useEffect(() => {
+    async function fetchOrders() {
+      try {
+        setLoading(true);
+
+        const { data, error } = await supabase
+          .from('orders')
+          .select(
+            `
+            *,
+            items:order_items(
+              *,
+              product:products(
+                id,
+                name,
+                price,
+                sku
+              )
+            ),
+            services:order_services(*),
+            user:profiles(
+              id,
+              first_name,
+              last_name,
+              email
+            )
+          `
+          )
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          throw error;
+        }
+
+        // Transformar los datos al formato esperado por la interfaz
+        const formattedOrders = data.map((order) => ({
+          id: order.order_number,
+          customer: {
+            name: order.user
+              ? `${order.user.first_name || ''} ${order.user.last_name || ''}`.trim()
+              : order.guest_name || 'Cliente invitado',
+            email: order.user?.email || order.guest_email || 'Sin email',
+            phone: order.guest_phone || 'Sin teléfono',
+          },
+          items: order.items.map((item) => ({
+            id: item.id,
+            name: item.product_name || item.product?.name || 'Producto',
+            price: item.unit_price || 0,
+            quantity: item.quantity || 1,
+            image: item.product_image_url || '/placeholder.svg?height=50&width=50',
+          })),
+          total: order.total_amount,
+          status: order.status,
+          paymentStatus: order.payment_status,
+          paymentMethod: order.payment_method,
+          shippingAddress: order.shipping_address
+            ? typeof order.shipping_address === 'string'
+              ? order.shipping_address
+              : JSON.stringify(order.shipping_address)
+            : 'Sin dirección',
+          trackingNumber: order.tracking_number,
+          date: new Date(order.created_at).toLocaleDateString('es-MX'),
+          notes: order.notes,
+        }));
+
+        setOrders(formattedOrders);
+      } catch (error) {
+        console.error('Error al cargar pedidos:', error);
+        toast({
+          title: 'Error',
+          description: 'No se pudieron cargar los pedidos',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchOrders();
+  }, [toast]);
 
   // Filtrar pedidos
   const filteredOrders = orders.filter((order) => {
@@ -221,7 +305,7 @@ export default function OrdersPage() {
   });
 
   // Actualizar estado del pedido
-  const handleUpdateOrderStatus = () => {
+  const handleUpdateOrderStatus = async () => {
     if (!selectedOrder || !newStatus) {
       toast({
         title: 'Error',
@@ -231,25 +315,59 @@ export default function OrdersPage() {
       return;
     }
 
-    const updatedOrders = orders.map((order) =>
-      order.id === selectedOrder.id
-        ? {
-            ...order,
-            status: newStatus as Order['status'],
-            trackingNumber: trackingNumber || order.trackingNumber,
-          }
-        : order
-    );
+    try {
+      // Buscar el ID real del pedido en Supabase usando el order_number
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('order_number', selectedOrder.id)
+        .single();
 
-    setOrders(updatedOrders);
-    setIsEditDialogOpen(false);
-    setSelectedOrder(null);
-    setNewStatus('');
-    setTrackingNumber('');
-    toast({
-      title: 'Pedido actualizado',
-      description: 'El estado del pedido se ha actualizado exitosamente',
-    });
+      if (orderError || !orderData) {
+        throw new Error('No se pudo encontrar el pedido');
+      }
+
+      // Actualizar el pedido en Supabase
+      const { error: updateError } = await supabase
+        .from('orders')
+        .update({
+          status: newStatus,
+          tracking_number: trackingNumber || undefined,
+        })
+        .eq('id', orderData.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      // Actualizar el estado local
+      const updatedOrders = orders.map((order) =>
+        order.id === selectedOrder.id
+          ? {
+              ...order,
+              status: newStatus as Order['status'],
+              trackingNumber: trackingNumber || order.trackingNumber,
+            }
+          : order
+      );
+
+      setOrders(updatedOrders);
+      setIsEditDialogOpen(false);
+      setSelectedOrder(null);
+      setNewStatus('');
+      setTrackingNumber('');
+      toast({
+        title: 'Pedido actualizado',
+        description: 'El estado del pedido se ha actualizado exitosamente',
+      });
+    } catch (error) {
+      console.error('Error al actualizar pedido:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar el estado del pedido',
+        variant: 'destructive',
+      });
+    }
   };
 
   // Abrir diálogos
@@ -431,71 +549,79 @@ export default function OrdersPage() {
           <CardDescription>{filteredOrders.length} pedidos encontrados</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID Pedido</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Pago</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.id}</TableCell>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{order.customer.name}</div>
-                      <div className="text-sm text-gray-500">{order.customer.email}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{order.date}</TableCell>
-                  <TableCell>{order.items.length} items</TableCell>
-                  <TableCell className="font-medium">${order.total.toFixed(2)}</TableCell>
-                  <TableCell>{getStatusBadge(order.status)}</TableCell>
-                  <TableCell>{getPaymentStatusBadge(order.paymentStatus)}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                        >
-                          <span className="sr-only">Abrir menú</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => openViewDialog(order)}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          Ver detalles
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => openEditDialog(order)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Actualizar estado
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <Truck className="mr-2 h-4 w-4" />
-                          Marcar como enviado
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <CheckCircle className="mr-2 h-4 w-4" />
-                          Marcar como completado
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary"></div>
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <div className="py-8 text-center text-gray-500">No se encontraron pedidos</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID Pedido</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Items</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Pago</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredOrders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-medium">{order.id}</TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{order.customer.name}</div>
+                        <div className="text-sm text-gray-500">{order.customer.email}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{order.date}</TableCell>
+                    <TableCell>{order.items.length} items</TableCell>
+                    <TableCell className="font-medium">${order.total.toFixed(2)}</TableCell>
+                    <TableCell>{getStatusBadge(order.status)}</TableCell>
+                    <TableCell>{getPaymentStatusBadge(order.paymentStatus)}</TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                          >
+                            <span className="sr-only">Abrir menú</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => openViewDialog(order)}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            Ver detalles
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openEditDialog(order)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Actualizar estado
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem>
+                            <Truck className="mr-2 h-4 w-4" />
+                            Marcar como enviado
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Marcar como completado
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 

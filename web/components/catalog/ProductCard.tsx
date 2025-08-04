@@ -21,7 +21,7 @@ export function ProductCard({ product, isFavorite, onFavoriteClick }: ProductCar
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     try {
       await addToCart({
         product_id: product.id,
@@ -61,7 +61,7 @@ export function ProductCard({ product, isFavorite, onFavoriteClick }: ProductCar
           </Button>
         </div>
       </Link>
-      
+
       {/* Contenido del producto */}
       <div className="p-4">
         <div className="mb-2">
@@ -75,7 +75,7 @@ export function ProductCard({ product, isFavorite, onFavoriteClick }: ProductCar
         <Button
           onClick={handleAddToCart}
           disabled={isProductUpdating}
-          className="mt-2 w-full bg-[#007BFF] hover:bg-[#0056b3] text-white"
+          className="mt-2 w-full bg-[#007BFF] text-white hover:bg-[#0056b3]"
           size="sm"
         >
           {isProductUpdating ? (

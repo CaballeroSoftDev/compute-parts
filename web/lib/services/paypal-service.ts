@@ -1,261 +1,113 @@
-import { supabase } from '@/lib/supabase';
-import { OrderService, Order } from './order-service';
-import { config, isPayPalConfigured } from '@/lib/config';
+import { supabase } from '../supabase';
+import { EdgeFunctionService } from './edge-function-service';
 
 export class PayPalService {
-	// Obtener token de acceso de PayPal
-	static async getAccessToken(): Promise<string> {
-		if (!isPayPalConfigured()) {
-			throw new Error('PayPal no está configurado. Verifica las variables de entorno.');
-		}
-
-		const auth = Buffer.from(`${config.paypal.clientId}:${config.paypal.clientSecret}`).toString('base64');
-		
-		const response = await fetch(`${config.paypal.baseUrl}/v1/oauth2/token`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-				'Authorization': `Basic ${auth}`,
-			},
-			body: 'grant_type=client_credentials',
-		});
-
-		if (!response.ok) {
-			const errorData = await response.json().catch(() => ({}));
-			console.error('Error obteniendo token de PayPal:', errorData);
-			throw new Error(`Error obteniendo token de PayPal: ${response.status} ${response.statusText}`);
-		}
-
-		const data = await response.json();
-		if (!data.access_token) {
-			throw new Error('Token de acceso no recibido de PayPal');
-		}
-
-		return data.access_token;
+	private static isConfigured(): boolean {
+		return !!(
+			process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID &&
+			process.env.PAYPAL_CLIENT_SECRET
+		);
 	}
 
-	// Crear orden en PayPal
+	// Crear orden en PayPal usando Edge Function
 	static async createPayPalOrder(orderData: {
 		amount: number;
-		currency: string;
-		description: string;
+		currency?: string;
+		description?: string;
 		cartItems?: Array<{
-			id: string;
 			name: string;
-			price: number;
 			quantity: number;
-			image_url?: string;
-		}>;
-	}): Promise<{ paypal_order_id: string; approval_url: string }> {
-		const tempOrderId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-		const accessToken = await this.getAccessToken();
-
-		// Calcular total de items
-		const itemsTotal = orderData.cartItems?.reduce((total, item) => {
-			return total + (item.price * item.quantity);
-		}, 0) || orderData.amount;
-
-		// Preparar items para PayPal
-		const paypalItems = orderData.cartItems?.map(item => ({
-			name: item.name,
 			unit_amount: {
-				currency_code: orderData.currency,
-				value: item.price.toFixed(2),
-			},
-			quantity: item.quantity.toString(),
-			description: `Producto: ${item.name}`,
-			sku: item.id,
-		})) || [];
-
-		const orderPayload = {
-			intent: 'CAPTURE',
-			purchase_units: [
-				{
-					reference_id: tempOrderId,
-					description: orderData.description,
-					amount: {
-						currency_code: orderData.currency,
-						value: orderData.amount.toFixed(2),
-						breakdown: {
-							item_total: {
-								currency_code: orderData.currency,
-								value: itemsTotal.toFixed(2),
-							},
-						},
-					},
-					items: paypalItems,
+				currency_code: string;
+				value: string;
+			};
+		}>;
+	}): Promise<{ id: string; status: string; links?: any[] }> {
+		try {
+			console.log('🔄 Creando orden de PayPal usando Edge Function...');
+			
+			const { data, error } = await supabase.functions.invoke('create-paypal-order', {
+				body: {
+					amount: orderData.amount,
+					currency: orderData.currency || 'MXN',
+					description: orderData.description || 'Compra en ComputeParts',
+					cartItems: orderData.cartItems || [],
 				},
-			],
-			application_context: {
-				shipping_preference: 'NO_SHIPPING',
-			},
-		};
+			});
 
-		const response = await fetch(`${config.paypal.baseUrl}/v2/checkout/orders`, {
+			if (error) {
+				console.error('❌ Error invocando Edge Function:', error);
+				throw new Error(`Error en Edge Function: ${error.message}`);
+			}
+
+			if (data.error) {
+				console.error('❌ Error en respuesta de Edge Function:', data.error);
+				throw new Error(data.error);
+			}
+
+			console.log('✅ Orden de PayPal creada exitosamente:', data.id);
+			return data;
+		} catch (error) {
+			console.error('❌ Error creando orden de PayPal:', error);
+			throw error;
+		}
+	}
+
+	// Capturar pago usando Edge Function
+	static async capturePayPalPayment(paypalOrderId: string, orderData: any): Promise<any> {
+		try {
+			console.log('🔄 Capturando pago con Edge Function...');
+			
+			// Usar el EdgeFunctionService para invocar la Edge Function
+			const result = await EdgeFunctionService.capturePayment(paypalOrderId, orderData);
+			
+			console.log('✅ Pago capturado exitosamente');
+			return result;
+		} catch (error) {
+			console.error('❌ Error capturando pago:', error);
+			
+			// Intentar método alternativo si falla el principal
+			try {
+				console.log('🔄 Intentando método alternativo...');
+				const fallbackResult = await EdgeFunctionService.capturePaymentWithFetch(paypalOrderId, orderData);
+				console.log('✅ Método alternativo exitoso');
+				return fallbackResult;
+			} catch (fallbackError) {
+				console.error('❌ Error en método alternativo:', fallbackError);
+				throw error; // Lanzar el error original
+			}
+		}
+	}
+
+	// Verificar estado de la Edge Function
+	static async checkEdgeFunctionStatus(): Promise<boolean> {
+		return await EdgeFunctionService.checkEdgeFunctionStatus();
+	}
+
+	// Probar Edge Function
+	static async testEdgeFunction(testData: any): Promise<any> {
+		return await EdgeFunctionService.testEdgeFunction(testData);
+	}
+
+	// Reembolsar pago (método auxiliar para casos de error)
+	static async refundPayment(captureId: string): Promise<any> {
+		if (!this.isConfigured()) {
+			throw new Error('PayPal no está configurado');
+		}
+
+		const response = await fetch('/api/paypal/refund-payment', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${accessToken}`,
 			},
-			body: JSON.stringify(orderPayload),
+			body: JSON.stringify({ capture_id: captureId }),
 		});
 
 		if (!response.ok) {
-			const errorData = await response.json().catch(() => ({}));
-			console.error('Error creando orden en PayPal:', errorData);
-			throw new Error(`PayPal API Error: ${errorData.message || errorData.error_description || 'Error desconocido'}`);
+			const error = await response.json();
+			throw new Error(error.error || 'Error al reembolsar pago');
 		}
 
-		const data = await response.json();
-		if (!data.id) {
-			throw new Error('ID de orden no recibido de PayPal');
-		}
-
-		return {
-			paypal_order_id: data.id,
-			approval_url: data.links.find((link: any) => link.rel === 'approve')?.href || '',
-		};
+		return await response.json();
 	}
-
-	// Capturar pago de PayPal
-	static async capturePayPalPayment(orderId: string): Promise<any> {
-		const accessToken = await this.getAccessToken();
-
-		const response = await fetch(`${config.paypal.baseUrl}/v2/checkout/orders/${orderId}/capture`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${accessToken}`,
-			},
-		});
-
-		if (!response.ok) {
-			const errorData = await response.json().catch(() => ({}));
-			console.error('Error capturando pago en PayPal:', errorData);
-			throw new Error(`PayPal API Error: ${errorData.message || errorData.error_description || 'Error desconocido'}`);
-		}
-
-		const data = await response.json();
-		if (!data.id) {
-			throw new Error('ID de captura no recibido de PayPal');
-		}
-
-		return data;
-	}
-
-	// Verificar si PayPal está configurado
-	static isConfigured(): boolean {
-		return isPayPalConfigured();
-	}
-
-	// Procesar pago exitoso
-	static async processSuccessfulPayment(paypalOrderId: string): Promise<Order> {
-		try {
-			// Capturar el pago
-			const paymentData = await this.capturePayPalPayment(paypalOrderId);
-			
-			// Extraer información del pago
-			const capture = paymentData.purchase_units[0]?.payments?.captures?.[0];
-			const payer = paymentData.payer;
-
-			// Actualizar estado de la orden
-			const order = await OrderService.updatePaymentStatus(
-				paymentData.purchase_units[0]?.reference_id || '',
-				'Pagado',
-				{
-					paypal_order_id: paymentData.id,
-					paypal_payment_id: paymentData.id,
-					payer_info: {
-						name: `${payer?.name?.given_name || ''} ${payer?.name?.surname || ''}`.trim(),
-						email: payer?.email_address || '',
-					},
-					captured_at: new Date().toISOString(),
-				}
-			);
-
-			// Actualizar estado de la orden a procesando
-			await OrderService.updateOrderStatus(order.id, 'Procesando');
-
-			return order;
-		} catch (error) {
-			console.error('Error procesando pago exitoso:', error);
-			throw new Error('Error al procesar el pago');
-		}
-	}
-
-	// Procesar pago cancelado
-	static async processCancelledPayment(orderId: string): Promise<Order> {
-		try {
-			// Actualizar estado de pago a fallido
-			const order = await OrderService.updatePaymentStatus(orderId, 'Fallido', {
-				cancelled_at: new Date().toISOString(),
-				reason: 'Pago cancelado por el usuario',
-			});
-
-			return order;
-		} catch (error) {
-			console.error('Error procesando pago cancelado:', error);
-			throw new Error('Error al procesar la cancelación');
-		}
-	}
-
-	// Verificar estado de una orden de PayPal
-	static async getPayPalOrderStatus(paypalOrderId: string): Promise<string> {
-		try {
-			const accessToken = await this.getAccessToken();
-			
-			const response = await fetch(`${config.paypal.baseUrl}/v2/checkout/orders/${paypalOrderId}`, {
-				method: 'GET',
-				headers: {
-					'Authorization': `Bearer ${accessToken}`,
-				},
-			});
-
-			if (!response.ok) {
-				const errorData = await response.json().catch(() => ({}));
-				throw new Error(`Error obteniendo estado de orden de PayPal: ${errorData.message || 'Error desconocido'}`);
-			}
-
-			const data: any = await response.json();
-			return data.status;
-		} catch (error) {
-			console.error('Error obteniendo estado de orden de PayPal:', error);
-			throw new Error('Error al verificar el estado del pago');
-		}
-	}
-
-	// Reembolsar pago
-	static async refundPayment(captureId: string, amount?: number): Promise<boolean> {
-		try {
-			const accessToken = await this.getAccessToken();
-			const refundData: any = {};
-			
-			if (amount) {
-				refundData.amount = {
-					value: amount.toFixed(2),
-					currency_code: 'MXN',
-				};
-			}
-
-			const response = await fetch(`${config.paypal.baseUrl}/v2/payments/captures/${captureId}/refund`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${accessToken}`,
-				},
-				body: JSON.stringify(refundData),
-			});
-
-			if (!response.ok) {
-				const errorData = await response.json().catch(() => ({}));
-				console.error('Error reembolsando pago:', errorData);
-				return false;
-			}
-
-			return true;
-		} catch (error) {
-			console.error('Error en refundPayment:', error);
-			return false;
-		}
-	}
-} 
+}

@@ -63,14 +63,13 @@ export function useAuth(): UseAuthReturn {
 
         if (error) {
           // Manejar silenciosamente errores de sesión faltante
-          if (error.message.includes('Auth session missing') || 
-              error.message.includes('AuthSessionMissingError')) {
+          if (error.message.includes('Auth session missing') || error.message.includes('AuthSessionMissingError')) {
             setUser(null);
             setProfile(null);
             setLoading(false);
             return;
           }
-          
+
           // Solo mostrar otros errores de autenticación
           console.error('Error getting user:', error);
           setError(error.message);
@@ -85,16 +84,16 @@ export function useAuth(): UseAuthReturn {
         }
       } catch (err) {
         // Manejar silenciosamente errores de sesión faltante
-        if (err instanceof Error && (
-          err.message.includes('Auth session missing') || 
-          err.message.includes('AuthSessionMissingError')
-        )) {
+        if (
+          err instanceof Error &&
+          (err.message.includes('Auth session missing') || err.message.includes('AuthSessionMissingError'))
+        ) {
           setUser(null);
           setProfile(null);
           setLoading(false);
           return;
         }
-        
+
         // Solo mostrar otros errores
         console.error('Error in getUser:', err);
         setError(err instanceof Error ? err.message : 'Error getting user');

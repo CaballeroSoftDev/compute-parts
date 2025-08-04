@@ -326,23 +326,23 @@ export default function ProductPage({ params }: ProductPageProps) {
               </div>
 
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                                 <Button
-                   className="flex-1 bg-[#007BFF] hover:bg-[#0056b3]"
-                   onClick={handleAddToCart}
-                   disabled={isUpdating(product.id)}
-                 >
-                   {isUpdating(product.id) ? (
-                     <>
-                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                       Agregando...
-                     </>
-                   ) : (
-                     <>
-                       <ShoppingCart className="mr-2 h-4 w-4" />
-                       Agregar al carrito
-                     </>
-                   )}
-                 </Button>
+                <Button
+                  className="flex-1 bg-[#007BFF] hover:bg-[#0056b3]"
+                  onClick={handleAddToCart}
+                  disabled={isUpdating(product.id)}
+                >
+                  {isUpdating(product.id) ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Agregando...
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      Agregar al carrito
+                    </>
+                  )}
+                </Button>
                 <Button
                   variant="outline"
                   className={`flex-1 border-[#007BFF] bg-transparent ${

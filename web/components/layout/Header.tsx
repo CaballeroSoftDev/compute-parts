@@ -24,7 +24,7 @@ export function Header() {
   const { user, signOut, profile } = useAuth();
   const { canAccessAdmin } = useAuthorization();
   const { calculateTotals } = useCart();
-  
+
   const { itemCount } = calculateTotals();
 
   const navigationItems = [
