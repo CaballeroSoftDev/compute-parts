@@ -5,6 +5,8 @@ import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { FavoritesProvider } from '@/lib/favorites-context';
 import { AuthProvider } from '@/lib/auth-context';
+import { CartProvider } from '@/lib/cart-context';
+import { PayPalProvider } from '@/components/providers/paypal-provider';
 import { Toaster } from '@/components/ui/toaster';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -34,8 +36,12 @@ export default function RootLayout({
         >
           <AuthProvider>
             <FavoritesProvider>
-              {children}
-              <Toaster />
+              <CartProvider>
+                <PayPalProvider>
+                  {children}
+                  <Toaster />
+                </PayPalProvider>
+              </CartProvider>
             </FavoritesProvider>
           </AuthProvider>
         </ThemeProvider>

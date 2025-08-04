@@ -34,14 +34,14 @@ export function useAuth(): UseAuthReturn {
       const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
 
       if (error) {
-        console.error('Error fetching profile:', error);
+        // No mostrar error en consola para errores de perfil
         setError(error.message);
         return;
       }
 
       setProfile(data);
     } catch (err) {
-      console.error('Error in fetchProfile:', err);
+      // No mostrar error en consola para errores de perfil
       setError(err instanceof Error ? err.message : 'Error fetching profile');
     }
   };
@@ -62,6 +62,16 @@ export function useAuth(): UseAuthReturn {
         } = await supabase.auth.getUser();
 
         if (error) {
+          // Manejar silenciosamente errores de sesión faltante
+          if (error.message.includes('Auth session missing') || 
+              error.message.includes('AuthSessionMissingError')) {
+            setUser(null);
+            setProfile(null);
+            setLoading(false);
+            return;
+          }
+          
+          // Solo mostrar otros errores de autenticación
           console.error('Error getting user:', error);
           setError(error.message);
           setLoading(false);
@@ -74,6 +84,18 @@ export function useAuth(): UseAuthReturn {
           await fetchProfile(user.id);
         }
       } catch (err) {
+        // Manejar silenciosamente errores de sesión faltante
+        if (err instanceof Error && (
+          err.message.includes('Auth session missing') || 
+          err.message.includes('AuthSessionMissingError')
+        )) {
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+          return;
+        }
+        
+        // Solo mostrar otros errores
         console.error('Error in getUser:', err);
         setError(err instanceof Error ? err.message : 'Error getting user');
       } finally {

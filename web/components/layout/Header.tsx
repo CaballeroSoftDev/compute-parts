@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useFavorites } from '@/lib/favorites-context';
 import { useAuth } from '@/lib/auth-context';
 import { useAuthorization } from '@/lib/hooks/use-authorization';
+import { useCart } from '@/lib/hooks/use-cart';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +23,9 @@ export function Header() {
   const { favorites } = useFavorites();
   const { user, signOut, profile } = useAuth();
   const { canAccessAdmin } = useAuthorization();
+  const { calculateTotals } = useCart();
+  
+  const { itemCount } = calculateTotals();
 
   const navigationItems = [
     { name: 'Catálogo', href: '/catalog' },
@@ -93,8 +97,17 @@ export function Header() {
               <Button
                 variant="ghost"
                 size="icon"
+                className="relative"
               >
                 <ShoppingCart className="h-5 w-5" />
+                {itemCount > 0 && (
+                  <Badge
+                    variant="destructive"
+                    className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center p-0 text-xs"
+                  >
+                    {itemCount}
+                  </Badge>
+                )}
               </Button>
             </Link>
             {user ? (

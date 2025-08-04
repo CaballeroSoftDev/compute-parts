@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Heart, ShoppingCart, ChevronLeft, ChevronRight, Star, Truck, Clock, Shield, Loader2 } from 'lucide-react';
 import { useFavorites } from '@/lib/favorites-context';
+import { useCart } from '@/lib/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { CatalogService } from '@/lib/utils/catalog-service';
 import { ImageHelper } from '@/lib/utils/image-helper';
@@ -26,6 +27,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(null);
 
   const { favorites, addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+  const { addToCart, isUpdating } = useCart();
   const { toast } = useToast();
 
   // Resolver los parámetros de la URL
@@ -131,15 +133,17 @@ export default function ProductPage({ params }: ProductPageProps) {
     }
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!product) return;
 
-    // TODO: Implementar lógica del carrito
-    toast({
-      title: 'Agregado al carrito',
-      description: `${product.name} se agregó al carrito`,
-      variant: 'default',
-    });
+    try {
+      await addToCart({
+        product_id: product.id,
+        quantity: quantity,
+      });
+    } catch (error) {
+      console.error('Error agregando al carrito:', error);
+    }
   };
 
   // Mostrar loading
@@ -322,13 +326,23 @@ export default function ProductPage({ params }: ProductPageProps) {
               </div>
 
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <Button
-                  className="flex-1 bg-[#007BFF] hover:bg-[#0056b3]"
-                  onClick={handleAddToCart}
-                >
-                  <ShoppingCart className="mr-2 h-4 w-4" />
-                  Agregar al carrito
-                </Button>
+                                 <Button
+                   className="flex-1 bg-[#007BFF] hover:bg-[#0056b3]"
+                   onClick={handleAddToCart}
+                   disabled={isUpdating(product.id)}
+                 >
+                   {isUpdating(product.id) ? (
+                     <>
+                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                       Agregando...
+                     </>
+                   ) : (
+                     <>
+                       <ShoppingCart className="mr-2 h-4 w-4" />
+                       Agregar al carrito
+                     </>
+                   )}
+                 </Button>
                 <Button
                   variant="outline"
                   className={`flex-1 border-[#007BFF] bg-transparent ${

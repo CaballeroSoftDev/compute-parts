@@ -1,6 +1,9 @@
 import Link from 'next/link';
+import { useAuth } from '@/lib/hooks/use-auth';
 
 export function MainNav() {
+  const { user } = useAuth();
+
   return (
     <nav className="flex items-center gap-6 text-sm">
       <Link
@@ -15,6 +18,14 @@ export function MainNav() {
       >
         Marcas
       </Link>
+      {user && (
+        <Link
+          href="/orders"
+          className="font-medium text-black transition-colors hover:text-[#007BFF]"
+        >
+          Mis Órdenes
+        </Link>
+      )}
       <Link
         href="/support"
         className="font-medium text-black transition-colors hover:text-[#007BFF]"
