@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { OrderService, Order, CreateOrderData } from '@/lib/services/order-service';
+import { CashOrderService } from '@/lib/services/cash-order-service';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from './use-auth';
 
@@ -56,13 +57,58 @@ export function useAuthOrders() {
 
       try {
         setCreating(true);
-        const newOrder = await OrderService.createOrder(orderData);
-        setCurrentOrder(newOrder);
-        toast({
-          title: 'Orden creada',
-          description: 'Tu orden se ha creado exitosamente',
-        });
-        return newOrder;
+
+        // Determinar el tipo de orden y usar el servicio apropiado
+        if (orderData.payment_method === 'Efectivo') {
+          // Validar datos de orden de efectivo
+          const validation = CashOrderService.validateOrderData(orderData as any);
+          if (!validation.isValid) {
+            throw new Error(`Datos de orden inválidos: ${validation.errors.join(', ')}`);
+          }
+
+          // Usar CashOrderService para órdenes de efectivo
+          const newOrder = await CashOrderService.createCashOrder(orderData as any, user.id);
+          
+          // Convertir el resultado al tipo Order
+          const orderResult: Order = {
+            id: newOrder.id,
+            order_number: newOrder.order_number,
+            user_id: user.id,
+            status: newOrder.status as any,
+            payment_status: newOrder.payment_status as any,
+            payment_method: 'Efectivo',
+            subtotal: orderData.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0,
+            tax_amount: 0,
+            shipping_amount: orderData.shipping_method === 'delivery' ? 150 : 0, // Valor por defecto
+            discount_amount: 0,
+            total_amount: orderData.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0,
+            shipping_address_id: undefined, // No está en CreateOrderData
+            shipping_address: orderData.shipping_address,
+            notes: orderData.notes,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            payment_details: {
+              qr_code: newOrder.qr_code,
+              method: 'cash',
+            },
+          };
+          
+          setCurrentOrder(orderResult);
+          toast({
+            title: 'Orden creada',
+            description: 'Tu orden se ha creado exitosamente. Paga en tienda con el QR.',
+          });
+          return orderResult;
+        } else {
+          // Para otros métodos de pago, usar el servicio original
+          const newOrder = await OrderService.createOrder(orderData);
+          setCurrentOrder(newOrder);
+          toast({
+            title: 'Orden creada',
+            description: 'Tu orden se ha creado exitosamente',
+          });
+          return newOrder;
+        }
       } catch (error) {
         console.error('Error creando orden:', error);
         toast({
@@ -179,21 +225,17 @@ export function useAuthOrders() {
     setCurrentOrder(null);
   }, []);
 
-  // Cargar órdenes solo cuando el usuario esté autenticado y no esté cargando
+  // Cargar órdenes al montar el componente
   useEffect(() => {
     if (user && !authLoading) {
       loadOrders();
-    } else if (!user && !authLoading) {
-      // Limpiar órdenes si el usuario no está autenticado
-      setOrders([]);
-      setCurrentOrder(null);
     }
   }, [user, authLoading, loadOrders]);
 
   return {
     orders,
     currentOrder,
-    loading: loading || authLoading,
+    loading,
     creating,
     loadOrders,
     createOrder,

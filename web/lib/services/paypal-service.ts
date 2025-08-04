@@ -1,4 +1,3 @@
-import { supabase } from '../supabase';
 import { EdgeFunctionService } from './edge-function-service';
 
 export class PayPalService {
@@ -21,29 +20,13 @@ export class PayPalService {
     }>;
   }): Promise<{ id: string; status: string; links?: any[] }> {
     try {
-      console.log('🔄 Creando orden de PayPal usando Edge Function...');
+      console.log('🔄 Creando orden de PayPal...');
 
-      const { data, error } = await supabase.functions.invoke('create-paypal-order', {
-        body: {
-          amount: orderData.amount,
-          currency: orderData.currency || 'MXN',
-          description: orderData.description || 'Compra en ComputeParts',
-          cartItems: orderData.cartItems || [],
-        },
-      });
+      // Usar EdgeFunctionService para consistencia
+      const result = await EdgeFunctionService.createPayPalOrder(orderData);
 
-      if (error) {
-        console.error('❌ Error invocando Edge Function:', error);
-        throw new Error(`Error en Edge Function: ${error.message}`);
-      }
-
-      if (data.error) {
-        console.error('❌ Error en respuesta de Edge Function:', data.error);
-        throw new Error(data.error);
-      }
-
-      console.log('✅ Orden de PayPal creada exitosamente:', data.id);
-      return data;
+      console.log('✅ Orden de PayPal creada exitosamente:', result.id);
+      return result;
     } catch (error) {
       console.error('❌ Error creando orden de PayPal:', error);
       throw error;
@@ -55,35 +38,74 @@ export class PayPalService {
     try {
       console.log('🔄 Capturando pago con Edge Function...');
 
-      // Usar el EdgeFunctionService para invocar la Edge Function
+      // Usar EdgeFunctionService para consistencia
       const result = await EdgeFunctionService.capturePayment(paypalOrderId, orderData);
 
       console.log('✅ Pago capturado exitosamente');
       return result;
     } catch (error) {
       console.error('❌ Error capturando pago:', error);
-
-      // Intentar método alternativo si falla el principal
-      try {
-        console.log('🔄 Intentando método alternativo...');
-        const fallbackResult = await EdgeFunctionService.capturePaymentWithFetch(paypalOrderId, orderData);
-        console.log('✅ Método alternativo exitoso');
-        return fallbackResult;
-      } catch (fallbackError) {
-        console.error('❌ Error en método alternativo:', fallbackError);
-        throw error; // Lanzar el error original
-      }
+      throw error;
     }
   }
 
-  // Verificar estado de la Edge Function
-  static async checkEdgeFunctionStatus(): Promise<boolean> {
-    return await EdgeFunctionService.checkEdgeFunctionStatus();
+  // Verificar estado de las Edge Functions de PayPal
+  static async checkPayPalFunctionsStatus(): Promise<{
+    createOrder: boolean;
+    capturePayment: boolean;
+  }> {
+    try {
+      console.log('🔍 Verificando estado de Edge Functions de PayPal...');
+
+      const [createOrderStatus, capturePaymentStatus] = await Promise.all([
+        EdgeFunctionService.checkEdgeFunctionStatus('create-paypal-order'),
+        EdgeFunctionService.checkEdgeFunctionStatus('capture-payment'),
+      ]);
+
+      const status = {
+        createOrder: createOrderStatus,
+        capturePayment: capturePaymentStatus,
+      };
+
+      console.log('📊 Estado de Edge Functions de PayPal:', status);
+      return status;
+    } catch (error) {
+      console.error('❌ Error verificando estado de Edge Functions de PayPal:', error);
+      return {
+        createOrder: false,
+        capturePayment: false,
+      };
+    }
   }
 
-  // Probar Edge Function
-  static async testEdgeFunction(testData: any): Promise<any> {
-    return await EdgeFunctionService.testEdgeFunction(testData);
+  // Probar Edge Functions de PayPal
+  static async testPayPalFunctions(): Promise<any> {
+    try {
+      console.log('🧪 Probando Edge Functions de PayPal...');
+
+      const testData = {
+        amount: 100,
+        currency: 'MXN',
+        description: 'Prueba de Edge Function',
+        cartItems: [
+          {
+            name: 'Producto de prueba',
+            quantity: 1,
+            unit_amount: {
+              currency_code: 'MXN',
+              value: '100.00',
+            },
+          },
+        ],
+      };
+
+      const result = await EdgeFunctionService.testEdgeFunction('create-paypal-order', testData);
+      console.log('✅ Prueba de Edge Functions de PayPal exitosa:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Error probando Edge Functions de PayPal:', error);
+      throw error;
+    }
   }
 
   // Reembolsar pago (método auxiliar para casos de error)
@@ -92,19 +114,8 @@ export class PayPalService {
       throw new Error('PayPal no está configurado');
     }
 
-    const response = await fetch('/api/paypal/refund-payment', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ capture_id: captureId }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Error al reembolsar pago');
-    }
-
-    return await response.json();
+    // Nota: Este método podría necesitar una Edge Function específica para reembolsos
+    // Por ahora, se mantiene como referencia para futuras implementaciones
+    throw new Error('Función de reembolso no implementada. Use el dashboard de PayPal.');
   }
 }

@@ -231,6 +231,23 @@ export default function OrderDetailPage() {
                     <div className="mt-1 rounded-lg bg-blue-50 p-3 text-sm">{order.notes}</div>
                   </div>
                 )}
+
+                {/* QR Code para pago en efectivo */}
+                {order.payment_method === 'Efectivo' && order.payment_details?.qr_code && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Código QR para Pago</label>
+                    <div className="mt-2 flex flex-col items-center space-y-2 rounded-lg bg-gray-50 p-4">
+                      <img
+                        src={order.payment_details.qr_code}
+                        alt="QR Code para pago"
+                        className="h-32 w-32 rounded-lg border"
+                      />
+                      <p className="text-xs text-gray-600">
+                        Escanea este código QR en tienda para pagar tu orden #{order.order_number}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

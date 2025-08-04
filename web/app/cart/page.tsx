@@ -131,6 +131,10 @@ export default function CartPage() {
         payment_method: 'Efectivo' as const,
         shipping_method: shippingMethod as 'pickup' | 'delivery',
         shipping_address: shippingMethod === 'delivery' ? shippingAddress : undefined,
+        shipping_address_id: selectedShippingAddressId || undefined,
+        subtotal: subtotal,
+        shipping_amount: shippingCost,
+        total_amount: finalTotal,
         notes: 'Pago en efectivo - QR para tienda',
         items: items.map((item) => ({
           product_id: item.product_id,
@@ -138,9 +142,11 @@ export default function CartPage() {
           price: item.product?.price || 0,
           quantity: item.quantity,
           image_url: item.product?.product_images?.[0]?.image_url,
+          sku: item.product?.sku,
         })),
       };
 
+      console.log('🔄 Creando orden de pago en efectivo...');
       const order = await createOrder(orderData);
 
       // Limpiar el carrito después de crear la orden exitosamente
@@ -156,7 +162,7 @@ export default function CartPage() {
 
       toast({
         title: '¡Orden creada!',
-        description: 'Tu orden ha sido creada. Paga en tienda con el QR. El carrito ha sido limpiado.',
+        description: `Tu orden #${order.order_number} ha sido creada. Paga en tienda con el QR. El carrito ha sido limpiado.`,
       });
 
       // Redirigir a la página de confirmación
@@ -165,7 +171,7 @@ export default function CartPage() {
       console.error('Error creando orden:', error);
       toast({
         title: 'Error',
-        description: 'Hubo un problema al crear la orden',
+        description: error instanceof Error ? error.message : 'Hubo un problema al crear la orden',
         variant: 'destructive',
       });
     } finally {
