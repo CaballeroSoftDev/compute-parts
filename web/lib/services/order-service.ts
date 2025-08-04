@@ -180,11 +180,15 @@ export class OrderService {
         .single();
 
       if (!profileError && profileData) {
+        // Obtener email usando la función RPC
+        const { data: emailData, error: emailError } = await supabase
+          .rpc('get_user_email', { user_id: data.user_id });
+
         data.user = {
           id: profileData.id,
           first_name: profileData.first_name || '',
           last_name: profileData.last_name || '',
-          email: '', // No incluimos email por seguridad
+          email: emailError ? '' : emailData?.email || '',
         };
       }
     }

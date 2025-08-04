@@ -216,30 +216,15 @@ export default function OrdersPage() {
       try {
         setLoading(true);
 
+        // Usar la función RPC optimizada en lugar de múltiples consultas
         const { data, error } = await supabase
-          .from('orders')
-          .select(
-            `
-            *,
-            items:order_items(
-              *,
-              product:products(
-                id,
-                name,
-                price,
-                sku
-              )
-            ),
-            services:order_services(*),
-            user:profiles(
-              id,
-              first_name,
-              last_name,
-              email
-            )
-          `
-          )
-          .order('created_at', { ascending: false });
+          .rpc('get_orders_with_user_data', {
+            p_limit: 100,
+            p_offset: 0,
+            p_status: null,
+            p_payment_status: null,
+            p_search: null
+          });
 
         if (error) {
           throw error;
@@ -249,19 +234,11 @@ export default function OrdersPage() {
         const formattedOrders = data.map((order) => ({
           id: order.order_number,
           customer: {
-            name: order.user
-              ? `${order.user.first_name || ''} ${order.user.last_name || ''}`.trim()
-              : order.guest_name || 'Cliente invitado',
-            email: order.user?.email || order.guest_email || 'Sin email',
-            phone: order.guest_phone || 'Sin teléfono',
+            name: order.customer_name,
+            email: order.customer_email,
+            phone: order.customer_phone,
           },
-          items: order.items.map((item) => ({
-            id: item.id,
-            name: item.product_name || item.product?.name || 'Producto',
-            price: item.unit_price || 0,
-            quantity: item.quantity || 1,
-            image: item.product_image_url || '/placeholder.svg?height=50&width=50',
-          })),
+          items: [], // Los items se cargarán por separado si es necesario
           total: order.total_amount,
           status: order.status,
           paymentStatus: order.payment_status,
