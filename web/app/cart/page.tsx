@@ -2,39 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
-import { Trash2, ChevronLeft, CreditCard, Wallet, QrCode, Loader2, ShoppingCart } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useCart } from '@/lib/hooks/use-cart';
 import { useAuthOrders } from '@/lib/hooks/use-auth-orders';
 import { PayPalButton } from '@/components/ui/paypal-button';
+import { ShippingAddressSelector } from '@/components/ui/shipping-address-selector';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { CartService } from '@/lib/services/cart-service';
-
 import { supabase } from '@/lib/supabase';
-
-// Servicios adicionales desde la base de datos
-const additionalServices = [
-  {
-    id: 'express',
-    name: 'Envío exprés',
-    description: 'Recibe tu pedido en 24 horas',
-    price: 199,
-  },
-  {
-    id: 'warranty',
-    name: 'Garantía extendida',
-    description: 'Extiende la garantía por 2 años adicionales',
-    price: 499,
-  },
-];
+import { Trash2, Package, Truck, CreditCard, DollarSign } from 'lucide-react';
 
 export default function CartPage() {
   const { items, loading, updateQuantity, removeFromCart, calculateTotals } = useCart();
@@ -42,19 +26,18 @@ export default function CartPage() {
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
 
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [shippingMethod, setShippingMethod] = useState('pickup');
   const [paymentMethod, setPaymentMethod] = useState('paypal');
   const [isFirstPurchase, setIsFirstPurchase] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [selectedShippingAddressId, setSelectedShippingAddressId] = useState<string | null>(null);
 
-  // Formulario de dirección
+  // Formulario de dirección (para envío sin dirección guardada)
   const [shippingAddress, setShippingAddress] = useState({
     first_name: '',
     last_name: '',
     phone: '',
     address_line_1: '',
-    address_line_2: '',
     city: '',
     state: '',
     postal_code: '',
@@ -85,18 +68,10 @@ export default function CartPage() {
     checkFirstPurchase();
   }, []);
 
-  const toggleService = (id: string) => {
-    setSelectedServices((prev) => (prev.includes(id) ? prev.filter((serviceId) => serviceId !== id) : [...prev, id]));
-  };
-
   // Cálculos
   const { subtotal, total, itemCount } = calculateTotals();
-  const servicesTotal = selectedServices.reduce((sum, serviceId) => {
-    const service = additionalServices.find((s) => s.id === serviceId);
-    return sum + (service?.price || 0);
-  }, 0);
   const shippingCost = shippingMethod === 'delivery' ? (isFirstPurchase ? 0 : 150) : 0;
-  const finalTotal = subtotal + servicesTotal + shippingCost;
+  const finalTotal = subtotal + shippingCost;
 
   const handleQuantityChange = async (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
@@ -107,12 +82,12 @@ export default function CartPage() {
     await removeFromCart(itemId);
   };
 
-  const handlePayPalSuccess = async (paymentData: any) => {
+  const handlePayPalSuccess = async (data: any) => {
     try {
       // La orden ya se creó en Supabase durante la captura del pago
       // Limpiar el carrito después del pago exitoso
       console.log('🛒 Limpiando carrito después del pago exitoso...');
-      
+
       try {
         await CartService.clearCart();
         console.log('✅ Carrito limpiado exitosamente');
@@ -142,11 +117,20 @@ export default function CartPage() {
     try {
       setProcessingPayment(true);
 
+      // Validar dirección de envío si es requerida
+      if (shippingMethod === 'delivery' && !selectedShippingAddressId) {
+        toast({
+          title: 'Dirección de envío requerida',
+          description: 'Debes seleccionar una dirección de envío para continuar',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const orderData = {
         payment_method: 'Efectivo' as const,
         shipping_method: shippingMethod as 'pickup' | 'delivery',
         shipping_address: shippingMethod === 'delivery' ? shippingAddress : undefined,
-        selected_services: selectedServices,
         notes: 'Pago en efectivo - QR para tienda',
         items: items.map((item) => ({
           product_id: item.product_id,
@@ -161,7 +145,7 @@ export default function CartPage() {
 
       // Limpiar el carrito después de crear la orden exitosamente
       console.log('🛒 Limpiando carrito después de crear orden...');
-      
+
       try {
         await CartService.clearCart();
         console.log('✅ Carrito limpiado exitosamente');
@@ -196,7 +180,7 @@ export default function CartPage() {
         <div className="container mx-auto px-4 py-8">
           <div className="mx-auto max-w-md text-center">
             <div className="mb-6">
-              <ShoppingCart className="mx-auto mb-4 h-16 w-16 text-gray-400" />
+              <Package className="mx-auto mb-4 h-16 w-16 text-gray-400" />
               <h1 className="mb-2 text-2xl font-bold text-gray-900">Carrito de Compras</h1>
               <p className="mb-6 text-gray-600">Debes iniciar sesión para ver tu carrito de compras</p>
             </div>
@@ -205,7 +189,7 @@ export default function CartPage() {
               <Link href="/login">
                 <Button className="w-full">Iniciar Sesión</Button>
               </Link>
-              
+
               <div className="pt-4">
                 <Link
                   href="/catalog"
@@ -221,29 +205,21 @@ export default function CartPage() {
     );
   }
 
-  // Si está cargando la autenticación, mostrar loading
-  if (authLoading) {
+  // Si no hay items en el carrito
+  if (!loading && items.length === 0) {
     return (
       <MainLayout>
         <div className="container mx-auto px-4 py-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <div className="flex items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-              <span className="ml-2 text-gray-600">Cargando...</span>
+          <div className="mx-auto max-w-md text-center">
+            <div className="mb-6">
+              <Package className="mx-auto mb-4 h-16 w-16 text-gray-400" />
+              <h1 className="mb-2 text-2xl font-bold text-gray-900">Carrito Vacío</h1>
+              <p className="mb-6 text-gray-600">No tienes productos en tu carrito de compras</p>
             </div>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
 
-  if (loading) {
-    return (
-      <MainLayout showNavigation={false}>
-        <div className="container py-6 md:py-10">
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin" />
-            <span className="ml-2">Cargando carrito...</span>
+            <Link href="/catalog">
+              <Button className="w-full">Continuar Comprando</Button>
+            </Link>
           </div>
         </div>
       </MainLayout>
@@ -251,378 +227,241 @@ export default function CartPage() {
   }
 
   return (
-    <MainLayout showNavigation={false}>
-      <div className="container py-6 md:py-10">
-        <div className="mb-6">
-          <Link
-            href="/catalog"
-            className="inline-flex items-center text-sm text-[#007BFF] hover:underline"
-          >
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            Continuar comprando
-          </Link>
-        </div>
-
-        <h1 className="mb-6 text-2xl font-bold">Carrito de Compras</h1>
-
-        {items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <p className="mb-2 text-lg font-medium">Tu carrito está vacío</p>
-            <p className="mb-4 text-gray-500">Agrega productos para continuar con tu compra</p>
-            <Link href="/catalog">
-              <Button className="bg-[#007BFF] hover:bg-[#0056b3]">Ver Catálogo</Button>
-            </Link>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-            {/* Lista de productos */}
-            <div className="lg:col-span-2">
-              <div className="overflow-hidden rounded-lg border">
-                <div className="bg-gray-50 p-4">
-                  <h2 className="font-medium">Productos</h2>
-                </div>
-
-                <div className="divide-y">
-                  {items.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex gap-4 p-4"
-                    >
-                      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md border">
-                        <Image
-                          src={item.product?.product_images?.[0]?.image_url || '/placeholder.svg'}
-                          alt={item.product?.name || 'Producto'}
-                          fill
-                          className="object-cover"
-                        />
+    <MainLayout>
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          {/* Carrito de compras */}
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="h-5 w-5" />
+                  Carrito de Compras ({itemCount} {itemCount === 1 ? 'producto' : 'productos'})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className="flex animate-pulse gap-4"
+                      >
+                        <div className="h-20 w-20 rounded bg-gray-200"></div>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 w-3/4 rounded bg-gray-200"></div>
+                          <div className="h-4 w-1/2 rounded bg-gray-200"></div>
+                        </div>
                       </div>
-
-                      <div className="flex flex-1 flex-col">
-                        <h3 className="text-sm font-medium">{item.product?.name}</h3>
-                        <p className="mt-1 text-sm text-gray-500">
-                          MX${((item.product?.price || 0) + (item.variant?.price_adjustment || 0)).toLocaleString()}
-                        </p>
-                        {item.variant && (
-                          <p className="text-xs text-gray-400">
-                            {item.variant.name}: {item.variant.value}
-                          </p>
-                        )}
-
-                        <div className="mt-auto flex items-center justify-between">
-                          <div className="flex items-center rounded-md border">
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex gap-4 rounded-lg border p-4"
+                      >
+                        <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-gray-100">
+                          {item.product?.product_images?.[0]?.image_url ? (
+                            <img
+                              src={item.product.product_images[0].image_url}
+                              alt={item.product.name}
+                              className="h-full w-full rounded-lg object-cover"
+                            />
+                          ) : (
+                            <Package className="h-8 w-8 text-gray-400" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-medium">{item.product?.name || 'Producto'}</h3>
+                          <p className="text-sm text-gray-600">{item.product?.sku}</p>
+                          <div className="mt-2 flex items-center gap-2">
                             <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 rounded-none"
+                              variant="outline"
+                              size="sm"
                               onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                              disabled={item.quantity <= 1}
                             >
                               -
                             </Button>
-                            <span className="w-8 text-center text-sm">{item.quantity}</span>
+                            <span className="w-8 text-center">{item.quantity}</span>
                             <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 rounded-none"
+                              variant="outline"
+                              size="sm"
                               onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
                             >
                               +
                             </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveItem(item.id)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
-
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-red-500 hover:text-red-700"
-                            onClick={() => handleRemoveItem(item.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Eliminar</span>
-                          </Button>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium">
+                            MX${((item.product?.price || 0) * item.quantity).toLocaleString()}
+                          </p>
+                          <p className="text-sm text-gray-600">MX${(item.product?.price || 0).toLocaleString()} c/u</p>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-              {/* Servicios adicionales */}
-              <div className="mt-6 overflow-hidden rounded-lg border">
-                <div className="bg-gray-50 p-4">
-                  <h2 className="font-medium">Servicios adicionales</h2>
-                </div>
-
-                <div className="space-y-4 p-4">
-                  {additionalServices.map((service) => (
-                    <div
-                      key={service.id}
-                      className="flex items-start space-x-3"
-                    >
-                      <Checkbox
-                        id={`service-${service.id}`}
-                        checked={selectedServices.includes(service.id)}
-                        onCheckedChange={() => toggleService(service.id)}
-                      />
-                      <div className="flex-1">
-                        <Label
-                          htmlFor={`service-${service.id}`}
-                          className="font-medium"
-                        >
-                          {service.name} (+MX${service.price.toLocaleString()})
-                        </Label>
-                        <p className="text-sm text-gray-500">{service.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Método de envío */}
-              <div className="mt-6 overflow-hidden rounded-lg border">
-                <div className="bg-gray-50 p-4">
-                  <h2 className="font-medium">Método de envío</h2>
-                </div>
-
-                <div className="p-4">
-                  <RadioGroup
-                    value={shippingMethod}
-                    onValueChange={setShippingMethod}
-                  >
-                    <div className="mb-4 flex items-start space-x-3">
+            {/* Método de envío */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Método de Envío</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RadioGroup
+                  value={shippingMethod}
+                  onValueChange={setShippingMethod}
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
                       <RadioGroupItem
                         value="pickup"
                         id="pickup"
                       />
-                      <div className="flex-1">
-                        <Label
-                          htmlFor="pickup"
-                          className="font-medium"
-                        >
-                          Recoger en tienda (Gratis)
-                        </Label>
-                        <p className="text-sm text-gray-500">
-                          Listo en 2 días hábiles. Tienes 2 días para recoger tu pedido.
-                        </p>
-                      </div>
+                      <Label
+                        htmlFor="pickup"
+                        className="flex cursor-pointer items-center gap-2"
+                      >
+                        <Package className="h-4 w-4" />
+                        Recoger en tienda (Gratis)
+                      </Label>
+                      <p className="ml-6 text-sm text-gray-600">
+                        Listo en 2 días hábiles. Tienes 2 días para recoger tu pedido.
+                      </p>
                     </div>
-
-                    <div className="flex items-start space-x-3">
+                    <div className="flex items-center space-x-2">
                       <RadioGroupItem
                         value="delivery"
                         id="delivery"
                       />
-                      <div className="flex-1">
-                        <Label
-                          htmlFor="delivery"
-                          className="font-medium"
-                        >
-                          Envío a domicilio {isFirstPurchase ? '(Gratis en tu primera compra)' : '(+MX$150)'}
-                        </Label>
-                        <p className="text-sm text-gray-500">Solo disponible en la zona sur de México.</p>
-
-                        {shippingMethod === 'delivery' && (
-                          <div className="mt-4 space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                              <div className="space-y-1">
-                                <Label
-                                  htmlFor="first_name"
-                                  className="text-sm"
-                                >
-                                  Nombre
-                                </Label>
-                                <Input
-                                  id="first_name"
-                                  value={shippingAddress.first_name}
-                                  onChange={(e) =>
-                                    setShippingAddress((prev) => ({ ...prev, first_name: e.target.value }))
-                                  }
-                                  placeholder="Nombre"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <Label
-                                  htmlFor="last_name"
-                                  className="text-sm"
-                                >
-                                  Apellido
-                                </Label>
-                                <Input
-                                  id="last_name"
-                                  value={shippingAddress.last_name}
-                                  onChange={(e) =>
-                                    setShippingAddress((prev) => ({ ...prev, last_name: e.target.value }))
-                                  }
-                                  placeholder="Apellido"
-                                />
-                              </div>
-                            </div>
-                            <div className="space-y-1">
-                              <Label
-                                htmlFor="phone"
-                                className="text-sm"
-                              >
-                                Teléfono
-                              </Label>
-                              <Input
-                                id="phone"
-                                value={shippingAddress.phone}
-                                onChange={(e) => setShippingAddress((prev) => ({ ...prev, phone: e.target.value }))}
-                                placeholder="Teléfono"
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label
-                                htmlFor="address"
-                                className="text-sm"
-                              >
-                                Dirección
-                              </Label>
-                              <Input
-                                id="address"
-                                value={shippingAddress.address_line_1}
-                                onChange={(e) =>
-                                  setShippingAddress((prev) => ({ ...prev, address_line_1: e.target.value }))
-                                }
-                                placeholder="Calle, número, colonia"
-                              />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                              <div className="space-y-1">
-                                <Label
-                                  htmlFor="city"
-                                  className="text-sm"
-                                >
-                                  Ciudad
-                                </Label>
-                                <Input
-                                  id="city"
-                                  value={shippingAddress.city}
-                                  onChange={(e) => setShippingAddress((prev) => ({ ...prev, city: e.target.value }))}
-                                  placeholder="Ciudad"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <Label
-                                  htmlFor="postal"
-                                  className="text-sm"
-                                >
-                                  Código Postal
-                                </Label>
-                                <Input
-                                  id="postal"
-                                  value={shippingAddress.postal_code}
-                                  onChange={(e) =>
-                                    setShippingAddress((prev) => ({ ...prev, postal_code: e.target.value }))
-                                  }
-                                  placeholder="CP"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      <Label
+                        htmlFor="delivery"
+                        className="flex cursor-pointer items-center gap-2"
+                      >
+                        <Truck className="h-4 w-4" />
+                        Envío a domicilio {isFirstPurchase ? '(Gratis en tu primera compra)' : ''}
+                      </Label>
+                      <p className="ml-6 text-sm text-gray-600">Solo disponible en la zona sur de México.</p>
                     </div>
-                  </RadioGroup>
-                </div>
-              </div>
+                  </div>
+                </RadioGroup>
 
-              {/* Método de pago */}
-              <div className="mt-6 overflow-hidden rounded-lg border">
-                <div className="bg-gray-50 p-4">
-                  <h2 className="font-medium">Método de pago</h2>
-                </div>
+                {/* Dirección de envío */}
+                {shippingMethod === 'delivery' && (
+                  <div className="mt-4">
+                    <h3 className="mb-3 font-medium">Dirección</h3>
+                    <ShippingAddressSelector
+                      selectedAddressId={selectedShippingAddressId || undefined}
+                      onAddressSelect={setSelectedShippingAddressId}
+                      onAddressChange={(address) => {
+                        // Actualizar el formulario de dirección con los datos seleccionados
+                        setShippingAddress({
+                          first_name: address.first_name,
+                          last_name: address.last_name,
+                          phone: address.phone || '',
+                          address_line_1: address.address_line_1,
+                          city: address.city,
+                          state: address.state,
+                          postal_code: address.postal_code,
+                          country: address.country,
+                        });
+                      }}
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
-                <div className="p-4">
+          {/* Resumen y pago */}
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle>Resumen del Pedido</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Método de pago */}
+                <div>
+                  <h3 className="mb-3 font-medium">Método de Pago</h3>
                   <RadioGroup
                     value={paymentMethod}
                     onValueChange={setPaymentMethod}
                   >
-                    <div className="mb-4 flex items-center space-x-3">
-                      <RadioGroupItem
-                        value="paypal"
-                        id="paypal"
-                      />
-                      <Label
-                        htmlFor="paypal"
-                        className="flex items-center font-medium"
-                      >
-                        <Wallet className="mr-2 h-4 w-4" />
-                        PayPal
-                      </Label>
-                    </div>
-
-                    <div className="mb-4 flex items-center space-x-3">
-                      <RadioGroupItem
-                        value="cash"
-                        id="cash"
-                      />
-                      <Label
-                        htmlFor="cash"
-                        className="flex items-center font-medium"
-                      >
-                        <QrCode className="mr-2 h-4 w-4" />
-                        Efectivo (QR para tienda)
-                      </Label>
-                    </div>
-
-                    <div className="flex items-center space-x-3">
-                      <RadioGroupItem
-                        value="card"
-                        id="card"
-                      />
-                      <Label
-                        htmlFor="card"
-                        className="flex items-center font-medium"
-                      >
-                        <CreditCard className="mr-2 h-4 w-4" />
-                        Tarjeta de crédito/débito (Próximamente)
-                      </Label>
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem
+                          value="paypal"
+                          id="paypal"
+                        />
+                        <Label
+                          htmlFor="paypal"
+                          className="flex cursor-pointer items-center gap-2"
+                        >
+                          <CreditCard className="h-4 w-4" />
+                          PayPal
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem
+                          value="cash"
+                          id="cash"
+                        />
+                        <Label
+                          htmlFor="cash"
+                          className="flex cursor-pointer items-center gap-2"
+                        >
+                          <DollarSign className="h-4 w-4" />
+                          Efectivo (QR)
+                        </Label>
+                      </div>
                     </div>
                   </RadioGroup>
                 </div>
-              </div>
-            </div>
 
-            {/* Resumen de compra */}
-            <div className="lg:col-span-1">
-              <div className="sticky top-24 overflow-hidden rounded-lg border">
-                <div className="bg-gray-50 p-4">
-                  <h2 className="font-medium">Resumen de compra</h2>
-                </div>
-
-                <div className="space-y-4 p-4">
+                {/* Resumen de costos */}
+                <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-sm">Subtotal</span>
-                    <span className="text-sm font-medium">MX${subtotal.toLocaleString()}</span>
+                    <span>Subtotal:</span>
+                    <span>MX${subtotal.toLocaleString()}</span>
                   </div>
-
-                  {selectedServices.length > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-sm">Servicios adicionales</span>
-                      <span className="text-sm font-medium">MX${servicesTotal.toLocaleString()}</span>
-                    </div>
-                  )}
-
                   <div className="flex justify-between">
-                    <span className="text-sm">Envío</span>
-                    <span className="text-sm font-medium">
-                      {shippingMethod === 'pickup' || (shippingMethod === 'delivery' && isFirstPurchase)
-                        ? 'Gratis'
-                        : `MX$${shippingCost.toLocaleString()}`}
+                    <span>Envío:</span>
+                    <span>
+                      {shippingCost === 0 ? (
+                        <Badge variant="secondary">Gratis</Badge>
+                      ) : (
+                        `MX$${shippingCost.toLocaleString()}`
+                      )}
                     </span>
                   </div>
-
                   <Separator />
-
-                  <div className="flex justify-between">
-                    <span className="font-medium">Total</span>
-                    <span className="text-lg font-bold">MX${finalTotal.toLocaleString()}</span>
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total:</span>
+                    <span>MX${finalTotal.toLocaleString()}</span>
                   </div>
+                </div>
 
+                {/* Botones de pago */}
+                <div className="space-y-3">
                   {paymentMethod === 'paypal' && (
                     <PayPalButton
-                      amount={subtotal + servicesTotal}
+                      amount={finalTotal}
                       currency="MXN"
-                      disabled={creating}
+                      disabled={creating || processingPayment}
                       className="w-full"
                       cartItems={items.map((item) => ({
                         id: item.product_id,
@@ -635,7 +474,6 @@ export default function CartPage() {
                         payment_method: 'PayPal',
                         shipping_method: shippingMethod,
                         shipping_address: shippingMethod === 'delivery' ? shippingAddress : undefined,
-                        selected_services: selectedServices,
                         notes: 'Pago con PayPal',
                         items: items.map((item) => ({
                           product_id: item.product_id,
@@ -646,6 +484,8 @@ export default function CartPage() {
                         })),
                       }}
                       onSuccess={handlePayPalSuccess}
+                      requireShippingAddress={shippingMethod === 'delivery'}
+                      selectedShippingAddressId={selectedShippingAddressId || undefined}
                     />
                   )}
 
@@ -653,49 +493,16 @@ export default function CartPage() {
                     <Button
                       onClick={handleCashPayment}
                       disabled={creating || processingPayment}
-                      className="w-full bg-[#007BFF] hover:bg-[#0056b3]"
+                      className="w-full"
                     >
-                      {processingPayment ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Procesando...
-                        </>
-                      ) : (
-                        'Finalizar compra (Efectivo)'
-                      )}
+                      {processingPayment ? 'Procesando...' : 'Pagar en Efectivo'}
                     </Button>
                   )}
-
-                  {paymentMethod === 'card' && (
-                    <Button
-                      disabled
-                      className="w-full bg-gray-400"
-                    >
-                      Próximamente
-                    </Button>
-                  )}
-
-                  <p className="text-center text-xs text-gray-500">
-                    Al finalizar la compra, aceptas nuestros{' '}
-                    <Link
-                      href="/terms"
-                      className="text-[#007BFF] hover:underline"
-                    >
-                      términos y condiciones
-                    </Link>{' '}
-                    y{' '}
-                    <Link
-                      href="/privacy"
-                      className="text-[#007BFF] hover:underline"
-                    >
-                      política de privacidad
-                    </Link>
-                  </p>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
-        )}
+        </div>
       </div>
     </MainLayout>
   );

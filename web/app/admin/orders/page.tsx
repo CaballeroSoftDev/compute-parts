@@ -217,14 +217,13 @@ export default function OrdersPage() {
         setLoading(true);
 
         // Usar la función RPC optimizada en lugar de múltiples consultas
-        const { data, error } = await supabase
-          .rpc('get_orders_with_user_data', {
-            p_limit: 100,
-            p_offset: 0,
-            p_status: null,
-            p_payment_status: null,
-            p_search: null
-          });
+        const { data, error } = await supabase.rpc('get_orders_with_user_data', {
+          p_limit: 100,
+          p_offset: 0,
+          p_status: null,
+          p_payment_status: null,
+          p_search: null,
+        });
 
         if (error) {
           throw error;

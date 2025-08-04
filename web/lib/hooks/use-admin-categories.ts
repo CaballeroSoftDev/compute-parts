@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AdminService } from '@/lib/services/admin-service';
 import type { AdminCategory, CreateCategoryForm, UpdateCategoryForm } from '@/lib/types/admin';
+import { useAuth } from './use-auth';
 
 interface UseAdminCategoriesReturn {
   categories: AdminCategory[];
@@ -15,12 +16,20 @@ interface UseAdminCategoriesReturn {
 
 export function useAdminCategories(): UseAdminCategoriesReturn {
   const [categories, setCategories] = useState<AdminCategory[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Cambiado a false para no cargar automáticamente
   const [error, setError] = useState<string | null>(null);
   const isMountedRef = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const { user, profile, loading: authLoading, isAdmin } = useAuth();
 
   const fetchCategories = useCallback(async () => {
+    // Verificar permisos antes de hacer la petición
+    if (!user || !isAdmin) {
+      console.log('Usuario no autenticado o sin permisos de admin, no se cargan categorías');
+      setCategories([]);
+      return;
+    }
+
     // Cancelar request anterior si existe
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -73,7 +82,7 @@ export function useAdminCategories(): UseAdminCategoriesReturn {
         setLoading(false);
       }
     }
-  }, []);
+  }, [user, isAdmin]);
 
   const refreshCategories = useCallback(async () => {
     await fetchCategories();
@@ -81,6 +90,9 @@ export function useAdminCategories(): UseAdminCategoriesReturn {
 
   const createCategory = useCallback(
     async (data: CreateCategoryForm, imageFile?: File): Promise<AdminCategory> => {
+      if (!user || !isAdmin) {
+        throw new Error('No tienes permisos de administrador');
+      }
       try {
         setError(null); // Resetear error antes de la operación
         const newCategory = await AdminService.createCategory(data, imageFile);
@@ -92,11 +104,14 @@ export function useAdminCategories(): UseAdminCategoriesReturn {
         throw new Error(errorMessage);
       }
     },
-    [refreshCategories]
+    [refreshCategories, user, isAdmin]
   );
 
   const updateCategory = useCallback(
     async (id: string, data: UpdateCategoryForm, imageFile?: File): Promise<AdminCategory> => {
+      if (!user || !isAdmin) {
+        throw new Error('No tienes permisos de administrador');
+      }
       try {
         setError(null); // Resetear error antes de la operación
         const updatedCategory = await AdminService.updateCategory(id, data, imageFile);
@@ -108,11 +123,14 @@ export function useAdminCategories(): UseAdminCategoriesReturn {
         throw new Error(errorMessage);
       }
     },
-    [refreshCategories]
+    [refreshCategories, user, isAdmin]
   );
 
   const deleteCategory = useCallback(
     async (id: string): Promise<void> => {
+      if (!user || !isAdmin) {
+        throw new Error('No tienes permisos de administrador');
+      }
       try {
         setError(null); // Resetear error antes de la operación
         await AdminService.deleteCategory(id);
@@ -123,7 +141,7 @@ export function useAdminCategories(): UseAdminCategoriesReturn {
         throw new Error(errorMessage);
       }
     },
-    [refreshCategories]
+    [refreshCategories, user, isAdmin]
   );
 
   const clearError = useCallback(() => {
@@ -132,7 +150,15 @@ export function useAdminCategories(): UseAdminCategoriesReturn {
 
   useEffect(() => {
     isMountedRef.current = true;
-    fetchCategories();
+
+    // Solo cargar categorías si el usuario está autenticado, es admin y no está cargando
+    if (user && isAdmin && !authLoading) {
+      fetchCategories();
+    } else if (!user && !authLoading) {
+      // Limpiar categorías si el usuario no está autenticado
+      setCategories([]);
+      setError(null);
+    }
 
     return () => {
       isMountedRef.current = false;
@@ -140,11 +166,11 @@ export function useAdminCategories(): UseAdminCategoriesReturn {
         abortControllerRef.current.abort();
       }
     };
-  }, []); // Dependencias vacías para evitar loops infinitos
+  }, [user, isAdmin, authLoading, fetchCategories]);
 
   return {
     categories,
-    loading,
+    loading: loading || authLoading,
     error,
     refreshCategories,
     createCategory,

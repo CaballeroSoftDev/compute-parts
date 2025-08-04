@@ -354,24 +354,6 @@ async function createOrder(supabase: any, orderData: any, userId?: string) {
     throw new Error('Error al crear los items de la orden')
   }
 
-  // Crear servicios de la orden
-  if (selectedServices.length > 0) {
-    const orderServices = selectedServices.map((service: any) => ({
-      order_id: order.id,
-      service_id: service.id,
-      service_name: service.name,
-      price: service.price,
-    }))
-
-    const { error: servicesError } = await supabase
-      .from('order_services')
-      .insert(orderServices)
-
-    if (servicesError) {
-      console.error('Error creando servicios de orden:', servicesError)
-    }
-  }
-
   // Actualizar is_first_purchase si es usuario registrado
   if (userId) {
     await supabase

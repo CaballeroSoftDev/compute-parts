@@ -203,4 +203,4 @@ export function useAuthOrders() {
     clearCurrentOrder,
     isAuthenticated: !!user,
   };
-} 
+}

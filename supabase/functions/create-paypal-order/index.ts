@@ -17,6 +17,17 @@ serve(async (req) => {
     console.log('=== INICIO CREATE PAYPAL ORDER EDGE FUNCTION ===')
     console.log('Datos recibidos:', { amount, currency, description, cartItems })
 
+    // Log detallado de los items
+    console.log('📦 Items del carrito:')
+    cartItems.forEach((item, index) => {
+      console.log(`Item ${index + 1}:`, {
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        total: item.price * item.quantity
+      })
+    })
+
     if (!amount || amount <= 0) {
       return new Response(
         JSON.stringify({ error: 'Monto inválido' }),
@@ -79,7 +90,7 @@ serve(async (req) => {
       quantity: item.quantity.toString(),
       unit_amount: {
         currency_code: currency,
-        value: (item.price / 100).toFixed(2), // Convertir centavos a pesos
+        value: item.price.toFixed(2), // Los precios ya vienen en pesos
       },
     }))
 
@@ -90,10 +101,20 @@ serve(async (req) => {
         quantity: '1',
         unit_amount: {
           currency_code: currency,
-          value: (amount / 100).toFixed(2), // Convertir centavos a pesos
+          value: amount.toFixed(2), // El amount ya viene en pesos
         },
       })
     }
+
+    // Calcular el item_total exacto sumando todos los items
+    const itemTotal = paypalItems.reduce((total, item) => {
+      const itemValue = parseFloat(item.unit_amount.value) * parseInt(item.quantity)
+      return total + itemValue
+    }, 0)
+
+    console.log('💰 Cálculo del item_total:')
+    console.log('Item total calculado:', itemTotal)
+    console.log('Amount recibido:', amount)
 
     const paypalOrderData = {
       intent: 'CAPTURE',
@@ -101,11 +122,11 @@ serve(async (req) => {
         {
           amount: {
             currency_code: currency,
-            value: (amount / 100).toFixed(2), // Convertir centavos a pesos
+            value: amount.toFixed(2), // El amount ya viene en pesos
             breakdown: {
               item_total: {
                 currency_code: currency,
-                value: (amount / 100).toFixed(2),
+                value: itemTotal.toFixed(2),
               },
             },
           },

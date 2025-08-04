@@ -26,7 +26,6 @@ export interface Order {
   updated_at: string;
   // Relaciones
   items?: OrderItem[];
-  services?: OrderService[];
   user?: {
     id: string;
     first_name: string;
@@ -38,7 +37,6 @@ export interface Order {
     first_name: string;
     last_name: string;
     address_line_1: string;
-    address_line_2?: string;
     city: string;
     state: string;
     postal_code: string;
@@ -50,7 +48,7 @@ export interface Order {
 export interface OrderItem {
   id: string;
   order_id: string;
-  product_id: string;
+  product_id?: string;
   variant_id?: string;
   product_name: string;
   product_sku?: string;
@@ -64,7 +62,7 @@ export interface OrderItem {
     id: string;
     name: string;
     price: number;
-    sku: string;
+    sku?: string;
   };
   variant?: {
     id: string;
@@ -72,15 +70,6 @@ export interface OrderItem {
     value: string;
     price_adjustment: number;
   };
-}
-
-export interface OrderService {
-  id: string;
-  order_id: string;
-  service_id: string;
-  service_name: string;
-  price: number;
-  created_at: string;
 }
 
 export interface CreateOrderData {
@@ -159,7 +148,6 @@ export class OrderService {
 						price_adjustment
 					)
 				),
-				services:order_services(*),
 				shipping_address_data:shipping_addresses(*)
 			`
       )
@@ -181,8 +169,7 @@ export class OrderService {
 
       if (!profileError && profileData) {
         // Obtener email usando la función RPC
-        const { data: emailData, error: emailError } = await supabase
-          .rpc('get_user_email', { user_id: data.user_id });
+        const { data: emailData, error: emailError } = await supabase.rpc('get_user_email', { user_id: data.user_id });
 
         data.user = {
           id: profileData.id,
@@ -229,8 +216,7 @@ export class OrderService {
 						price,
 						sku
 					)
-				),
-				services:order_services(*)
+				)
 			`,
         { count: 'exact' }
       )

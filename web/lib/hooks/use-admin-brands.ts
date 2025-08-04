@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AdminService } from '@/lib/services/admin-service';
 import type { AdminBrand, CreateBrandForm, UpdateBrandForm } from '@/lib/types/admin';
+import { useAuth } from './use-auth';
 
 interface UseAdminBrandsReturn {
   brands: AdminBrand[];
@@ -15,12 +16,20 @@ interface UseAdminBrandsReturn {
 
 export function useAdminBrands(): UseAdminBrandsReturn {
   const [brands, setBrands] = useState<AdminBrand[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Cambiado a false para no cargar automáticamente
   const [error, setError] = useState<string | null>(null);
   const isMountedRef = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const { user, profile, loading: authLoading, isAdmin } = useAuth();
 
   const fetchBrands = useCallback(async () => {
+    // Verificar permisos antes de hacer la petición
+    if (!user || !isAdmin) {
+      console.log('Usuario no autenticado o sin permisos de admin, no se cargan marcas');
+      setBrands([]);
+      return;
+    }
+
     // Cancelar request anterior si existe
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -73,7 +82,7 @@ export function useAdminBrands(): UseAdminBrandsReturn {
         setLoading(false);
       }
     }
-  }, []);
+  }, [user, isAdmin]);
 
   const refreshBrands = useCallback(async () => {
     await fetchBrands();
@@ -81,6 +90,9 @@ export function useAdminBrands(): UseAdminBrandsReturn {
 
   const createBrand = useCallback(
     async (data: CreateBrandForm): Promise<AdminBrand> => {
+      if (!user || !isAdmin) {
+        throw new Error('No tienes permisos de administrador');
+      }
       try {
         setError(null); // Resetear error antes de la operación
         const newBrand = await AdminService.createBrand(data);
@@ -92,11 +104,14 @@ export function useAdminBrands(): UseAdminBrandsReturn {
         throw new Error(errorMessage);
       }
     },
-    [refreshBrands]
+    [refreshBrands, user, isAdmin]
   );
 
   const updateBrand = useCallback(
     async (id: string, data: UpdateBrandForm): Promise<AdminBrand> => {
+      if (!user || !isAdmin) {
+        throw new Error('No tienes permisos de administrador');
+      }
       try {
         setError(null); // Resetear error antes de la operación
         const updatedBrand = await AdminService.updateBrand(id, data);
@@ -108,11 +123,14 @@ export function useAdminBrands(): UseAdminBrandsReturn {
         throw new Error(errorMessage);
       }
     },
-    [refreshBrands]
+    [refreshBrands, user, isAdmin]
   );
 
   const deleteBrand = useCallback(
     async (id: string): Promise<void> => {
+      if (!user || !isAdmin) {
+        throw new Error('No tienes permisos de administrador');
+      }
       try {
         setError(null); // Resetear error antes de la operación
         await AdminService.deleteBrand(id);
@@ -123,7 +141,7 @@ export function useAdminBrands(): UseAdminBrandsReturn {
         throw new Error(errorMessage);
       }
     },
-    [refreshBrands]
+    [refreshBrands, user, isAdmin]
   );
 
   const clearError = useCallback(() => {
@@ -132,7 +150,15 @@ export function useAdminBrands(): UseAdminBrandsReturn {
 
   useEffect(() => {
     isMountedRef.current = true;
-    fetchBrands();
+
+    // Solo cargar marcas si el usuario está autenticado, es admin y no está cargando
+    if (user && isAdmin && !authLoading) {
+      fetchBrands();
+    } else if (!user && !authLoading) {
+      // Limpiar marcas si el usuario no está autenticado
+      setBrands([]);
+      setError(null);
+    }
 
     return () => {
       isMountedRef.current = false;
@@ -140,11 +166,11 @@ export function useAdminBrands(): UseAdminBrandsReturn {
         abortControllerRef.current.abort();
       }
     };
-  }, []); // Dependencias vacías para evitar loops infinitos
+  }, [user, isAdmin, authLoading, fetchBrands]);
 
   return {
     brands,
-    loading,
+    loading: loading || authLoading,
     error,
     refreshBrands,
     createBrand,

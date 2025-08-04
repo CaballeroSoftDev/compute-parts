@@ -269,24 +269,42 @@ export default function OrderDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Servicios Adicionales */}
-            {order.services && order.services.length > 0 && (
+            {/* Información de Envío */}
+            {order.shipping_address && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Servicios Adicionales</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPinIcon className="h-5 w-5" />
+                    Dirección de Envío
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    {order.services.map((service) => (
-                      <div
-                        key={service.id}
-                        className="flex items-center justify-between rounded-lg border p-3"
-                      >
-                        <span className="font-medium">{service.service_name}</span>
-                        <span className="font-medium">{formatCurrency(service.price)}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {typeof order.shipping_address === 'string' ? (
+                    <p className="text-sm">{order.shipping_address}</p>
+                  ) : (
+                    <div className="space-y-2 text-sm">
+                      <p>
+                        <strong>Nombre:</strong> {order.shipping_address.first_name} {order.shipping_address.last_name}
+                      </p>
+                      <p>
+                        <strong>Dirección:</strong> {order.shipping_address.address_line_1}
+                      </p>
+                      <p>
+                        <strong>Ciudad:</strong> {order.shipping_address.city}
+                      </p>
+                      <p>
+                        <strong>Estado:</strong> {order.shipping_address.state}
+                      </p>
+                      <p>
+                        <strong>Código Postal:</strong> {order.shipping_address.postal_code}
+                      </p>
+                      {order.shipping_address.phone && (
+                        <p>
+                          <strong>Teléfono:</strong> {order.shipping_address.phone}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -346,7 +364,6 @@ export default function OrderDetailPage() {
                       </p>
                       <p>
                         <strong>Dirección:</strong> {order.shipping_address.address_line_1}
-                        {order.shipping_address.address_line_2 && <>, {order.shipping_address.address_line_2}</>}
                       </p>
                       <p>
                         <strong>Ciudad:</strong> {order.shipping_address.city}

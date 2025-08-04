@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/use-auth';
-import { Loader2, Shield, AlertTriangle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface AdminGuardProps {
@@ -17,20 +17,15 @@ export function AdminGuard({ children, requireSuperAdmin = false }: AdminGuardPr
 
   useEffect(() => {
     if (!loading) {
-      if (!user) {
-        // Usuario no autenticado, redirigir al login
-        router.push('/auth/login');
-        return;
-      }
-
-      if (!isAdmin) {
-        // Usuario no es admin, redirigir al dashboard
-        router.push('/dashboard');
+      // Verificación adicional de seguridad (el middleware ya hizo la validación principal)
+      if (!user || !isAdmin) {
+        console.log('🔒 AdminGuard: Usuario no autorizado, redirigiendo a /');
+        router.push('/');
         return;
       }
 
       if (requireSuperAdmin && !isSuperAdmin) {
-        // Se requiere superadmin pero el usuario no lo es
+        console.log('🔒 AdminGuard: Se requiere superadmin, redirigiendo a /admin');
         router.push('/admin');
         return;
       }
@@ -51,56 +46,6 @@ export function AdminGuard({ children, requireSuperAdmin = false }: AdminGuardPr
     );
   }
 
-  if (!user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Card className="w-96">
-          <CardHeader className="text-center">
-            <AlertTriangle className="mx-auto h-8 w-8 text-red-500" />
-            <CardTitle>Acceso denegado</CardTitle>
-            <CardDescription>Debes iniciar sesión para acceder al panel administrativo.</CardDescription>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-gray-500">Redirigiendo al login...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Card className="w-96">
-          <CardHeader className="text-center">
-            <Shield className="mx-auto h-8 w-8 text-orange-500" />
-            <CardTitle>Permisos insuficientes</CardTitle>
-            <CardDescription>No tienes permisos de administrador para acceder a esta sección.</CardDescription>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-gray-500">Redirigiendo al dashboard...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (requireSuperAdmin && !isSuperAdmin) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Card className="w-96">
-          <CardHeader className="text-center">
-            <Shield className="mx-auto h-8 w-8 text-red-500" />
-            <CardTitle>Permisos de superadmin requeridos</CardTitle>
-            <CardDescription>Esta sección requiere permisos de superadministrador.</CardDescription>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-gray-500">Redirigiendo al panel administrativo...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
+  // Si llegamos aquí, el usuario está autenticado y es admin (validado por middleware)
   return <>{children}</>;
 }

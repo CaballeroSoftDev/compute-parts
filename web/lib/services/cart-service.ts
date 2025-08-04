@@ -140,7 +140,14 @@ export class CartService {
       query = query.is('variant_id', null);
     }
 
-    const { data: existingItem } = await query.single();
+    // Usar maybeSingle() en lugar de single() para manejar el caso de 0 filas
+    const { data: existingItem, error: queryError } = await query.maybeSingle();
+
+    // Si hay un error en la consulta (no relacionado con 0 filas), lanzarlo
+    if (queryError && queryError.code !== 'PGRST116') {
+      console.error('Error verificando item existente:', queryError);
+      throw new Error('Error al verificar el carrito');
+    }
 
     if (existingItem) {
       // Actualizar cantidad si ya existe

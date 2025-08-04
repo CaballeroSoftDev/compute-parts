@@ -17,7 +17,10 @@ export function useOrders() {
     async (page = 1, limit = 10) => {
       try {
         // Verificar autenticación antes de intentar cargar órdenes
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
         if (authError || !user) {
           console.log('Usuario no autenticado, no se cargan órdenes');
           setOrders([]);
@@ -160,7 +163,10 @@ export function useOrders() {
     // Verificar autenticación antes de cargar órdenes
     const checkAuthAndLoadOrders = async () => {
       try {
-        const { data: { user }, error } = await supabase.auth.getUser();
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser();
         if (!error && user) {
           loadOrders();
         }

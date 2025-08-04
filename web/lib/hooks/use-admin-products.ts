@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AdminService } from '@/lib/services/admin-service';
 import type { AdminProduct, AdminFilters, CreateProductForm, UpdateProductForm } from '@/lib/types/admin';
+import { useAuth } from './use-auth';
 
 interface UseAdminProductsReturn {
   products: AdminProduct[];
@@ -27,7 +28,7 @@ interface UseAdminProductsReturn {
 
 export function useAdminProducts(): UseAdminProductsReturn {
   const [products, setProducts] = useState<AdminProduct[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Cambiado a false para no cargar automáticamente
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -38,8 +39,16 @@ export function useAdminProducts(): UseAdminProductsReturn {
   const [filters, setFiltersState] = useState<AdminFilters>({});
   const isMountedRef = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const { user, profile, loading: authLoading, isAdmin } = useAuth();
 
   const fetchProducts = useCallback(async () => {
+    // Verificar permisos antes de hacer la petición
+    if (!user || !isAdmin) {
+      console.log('Usuario no autenticado o sin permisos de admin, no se cargan productos');
+      setProducts([]);
+      return;
+    }
+
     // Cancelar request anterior si existe
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -94,7 +103,7 @@ export function useAdminProducts(): UseAdminProductsReturn {
         setLoading(false);
       }
     }
-  }, [filters, pagination.page, pagination.limit]);
+  }, [filters, pagination.page, pagination.limit, user, isAdmin]);
 
   const refreshProducts = useCallback(async () => {
     await fetchProducts();
@@ -102,6 +111,9 @@ export function useAdminProducts(): UseAdminProductsReturn {
 
   const createProduct = useCallback(
     async (data: CreateProductForm): Promise<AdminProduct> => {
+      if (!user || !isAdmin) {
+        throw new Error('No tienes permisos de administrador');
+      }
       try {
         setError(null);
         const newProduct = await AdminService.createProduct(data);
@@ -113,11 +125,14 @@ export function useAdminProducts(): UseAdminProductsReturn {
         throw new Error(errorMessage);
       }
     },
-    [refreshProducts]
+    [refreshProducts, user, isAdmin]
   );
 
   const updateProduct = useCallback(
     async (id: string, data: UpdateProductForm): Promise<AdminProduct> => {
+      if (!user || !isAdmin) {
+        throw new Error('No tienes permisos de administrador');
+      }
       try {
         setError(null);
         const updatedProduct = await AdminService.updateProduct(id, data);
@@ -129,11 +144,14 @@ export function useAdminProducts(): UseAdminProductsReturn {
         throw new Error(errorMessage);
       }
     },
-    [refreshProducts]
+    [refreshProducts, user, isAdmin]
   );
 
   const deleteProduct = useCallback(
     async (id: string): Promise<void> => {
+      if (!user || !isAdmin) {
+        throw new Error('No tienes permisos de administrador');
+      }
       try {
         setError(null);
         await AdminService.deleteProduct(id);
@@ -144,11 +162,14 @@ export function useAdminProducts(): UseAdminProductsReturn {
         throw new Error(errorMessage);
       }
     },
-    [refreshProducts]
+    [refreshProducts, user, isAdmin]
   );
 
   const updateProductStock = useCallback(
     async (id: string, quantity: number): Promise<AdminProduct> => {
+      if (!user || !isAdmin) {
+        throw new Error('No tienes permisos de administrador');
+      }
       try {
         setError(null);
         const updatedProduct = await AdminService.updateProductStock(id, quantity);
@@ -160,10 +181,13 @@ export function useAdminProducts(): UseAdminProductsReturn {
         throw new Error(errorMessage);
       }
     },
-    [refreshProducts]
+    [refreshProducts, user, isAdmin]
   );
 
   const getLowStockProducts = useCallback(async (): Promise<AdminProduct[]> => {
+    if (!user || !isAdmin) {
+      throw new Error('No tienes permisos de administrador');
+    }
     try {
       setError(null);
       return await AdminService.getLowStockProducts();
@@ -172,9 +196,12 @@ export function useAdminProducts(): UseAdminProductsReturn {
       setError(errorMessage);
       throw new Error(errorMessage);
     }
-  }, []);
+  }, [user, isAdmin]);
 
   const getOutOfStockProducts = useCallback(async (): Promise<AdminProduct[]> => {
+    if (!user || !isAdmin) {
+      throw new Error('No tienes permisos de administrador');
+    }
     try {
       setError(null);
       return await AdminService.getOutOfStockProducts();
@@ -183,7 +210,7 @@ export function useAdminProducts(): UseAdminProductsReturn {
       setError(errorMessage);
       throw new Error(errorMessage);
     }
-  }, []);
+  }, [user, isAdmin]);
 
   const setPage = useCallback((page: number) => {
     setPagination((prev) => ({ ...prev, page }));
@@ -200,7 +227,15 @@ export function useAdminProducts(): UseAdminProductsReturn {
 
   useEffect(() => {
     isMountedRef.current = true;
-    fetchProducts();
+
+    // Solo cargar productos si el usuario está autenticado, es admin y no está cargando
+    if (user && isAdmin && !authLoading) {
+      fetchProducts();
+    } else if (!user && !authLoading) {
+      // Limpiar productos si el usuario no está autenticado
+      setProducts([]);
+      setError(null);
+    }
 
     return () => {
       isMountedRef.current = false;
@@ -208,11 +243,11 @@ export function useAdminProducts(): UseAdminProductsReturn {
         abortControllerRef.current.abort();
       }
     };
-  }, [fetchProducts]); // Agregar fetchProducts como dependencia
+  }, [user, isAdmin, authLoading, fetchProducts]);
 
   return {
     products,
-    loading,
+    loading: loading || authLoading,
     error,
     pagination,
     filters,

@@ -271,25 +271,6 @@ export default function OrdersPage() {
                     ))}
                   </div>
 
-                  {/* Servicios adicionales */}
-                  {order.services && order.services.length > 0 && (
-                    <>
-                      <Separator className="my-4" />
-                      <div className="space-y-2">
-                        <h4 className="font-medium">Servicios adicionales:</h4>
-                        {order.services.map((service) => (
-                          <div
-                            key={service.id}
-                            className="flex justify-between text-sm"
-                          >
-                            <span>{service.service_name}</span>
-                            <span>MX${service.price.toLocaleString()}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  )}
-
                   {/* Información de envío */}
                   {order.shipping_address_data && (
                     <>
