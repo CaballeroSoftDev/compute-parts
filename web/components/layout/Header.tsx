@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Heart, ShoppingCart, User, Menu, X, LogOut, Shield } from 'lucide-react';
+import { Heart, ShoppingCart, User, Menu, X, LogOut, Shield, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useFavorites } from '@/lib/favorites-context';
@@ -146,7 +146,7 @@ export function Header() {
                     style={{ cursor: 'pointer' }}
                   >
                     <Link href="/orders">
-                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      <Package className="mr-2 h-4 w-4" />
                       Mis Pedidos
                     </Link>
                   </DropdownMenuItem>

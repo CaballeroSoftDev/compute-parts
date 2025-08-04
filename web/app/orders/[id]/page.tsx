@@ -367,42 +367,6 @@ export default function OrderDetailPage() {
                 </CardContent>
               </Card>
             )}
-
-            {/* Información del Cliente */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UserIcon className="h-5 w-5" />
-                  Información del Cliente
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                {order.user ? (
-                  <>
-                    <p>
-                      <strong>Nombre:</strong> {order.user.first_name} {order.user.last_name}
-                    </p>
-                    <p>
-                      <strong>Email:</strong> {order.user.email}
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p>
-                      <strong>Nombre:</strong> {order.guest_name}
-                    </p>
-                    <p>
-                      <strong>Email:</strong> {order.guest_email}
-                    </p>
-                    {order.guest_phone && (
-                      <p>
-                        <strong>Teléfono:</strong> {order.guest_phone}
-                      </p>
-                    )}
-                  </>
-                )}
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>

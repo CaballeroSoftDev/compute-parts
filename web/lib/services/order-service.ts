@@ -160,12 +160,6 @@ export class OrderService {
 					)
 				),
 				services:order_services(*),
-				user:profiles(
-					id,
-					first_name,
-					last_name,
-					email
-				),
 				shipping_address_data:shipping_addresses(*)
 			`
       )
@@ -175,6 +169,24 @@ export class OrderService {
     if (error) {
       console.error('Error obteniendo orden:', error);
       return null;
+    }
+
+    // Si la orden tiene un user_id, obtener los datos del perfil por separado
+    if (data.user_id) {
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .eq('id', data.user_id)
+        .single();
+
+      if (!profileError && profileData) {
+        data.user = {
+          id: profileData.id,
+          first_name: profileData.first_name || '',
+          last_name: profileData.last_name || '',
+          email: '', // No incluimos email por seguridad
+        };
+      }
     }
 
     return data;

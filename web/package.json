@@ -21,7 +21,8 @@
     "test:rls-fixed": "node scripts/test-rls-fixed.js",
     "test:final-rls": "node scripts/test-final-rls.js",
     "test:complete-fix": "node scripts/test-complete-fix.js",
-    "test:anon-key": "node scripts/test-anon-key.js"
+    "test:anon-key": "node scripts/test-anon-key.js",
+    "test:order-details": "node scripts/test-order-details.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

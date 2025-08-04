@@ -16,6 +16,7 @@ import { useOrders } from '@/lib/hooks/use-orders';
 import { PayPalButton } from '@/components/ui/paypal-button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { CartService } from '@/lib/services/cart-service';
 
 import { supabase } from '@/lib/supabase';
 
@@ -109,11 +110,20 @@ export default function CartPage() {
   const handlePayPalSuccess = async (paymentData: any) => {
     try {
       // La orden ya se creó en Supabase durante la captura del pago
-      // Solo mostrar mensaje de éxito y redirigir
+      // Limpiar el carrito después del pago exitoso
+      console.log('🛒 Limpiando carrito después del pago exitoso...');
+      
+      try {
+        await CartService.clearCart();
+        console.log('✅ Carrito limpiado exitosamente');
+      } catch (clearCartError) {
+        console.error('❌ Error limpiando carrito:', clearCartError);
+        // No lanzar error aquí para no interrumpir el flujo de éxito
+      }
 
       toast({
         title: '¡Pago exitoso!',
-        description: 'Tu orden ha sido procesada correctamente',
+        description: 'Tu orden ha sido procesada correctamente. El carrito ha sido limpiado.',
       });
 
       // Redirigir a la página de órdenes (la orden se creó en la captura)
@@ -149,9 +159,20 @@ export default function CartPage() {
 
       const order = await createOrder(orderData);
 
+      // Limpiar el carrito después de crear la orden exitosamente
+      console.log('🛒 Limpiando carrito después de crear orden...');
+      
+      try {
+        await CartService.clearCart();
+        console.log('✅ Carrito limpiado exitosamente');
+      } catch (clearCartError) {
+        console.error('❌ Error limpiando carrito:', clearCartError);
+        // No lanzar error aquí para no interrumpir el flujo de éxito
+      }
+
       toast({
         title: '¡Orden creada!',
-        description: 'Tu orden ha sido creada. Paga en tienda con el QR',
+        description: 'Tu orden ha sido creada. Paga en tienda con el QR. El carrito ha sido limpiado.',
       });
 
       // Redirigir a la página de confirmación
