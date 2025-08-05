@@ -19,36 +19,23 @@ export function AdminGuard({ children, requireSuperAdmin = false }: AdminGuardPr
 
   useEffect(() => {
     if (!loading) {
-      console.log('🔒 AdminGuard: Verificando acceso...', {
-        user: !!user,
-        profile: !!profile,
-        canAccessAdmin: canAccessAdmin(),
-        userRole,
-        requireSuperAdmin,
-      });
-
       // Si no hay usuario, redirigir a login
       if (!user) {
-        console.log('🔒 AdminGuard: Usuario no autenticado, redirigiendo a /login');
         router.push('/login');
         return;
       }
 
       // Si el usuario no es admin, redirigir a home
       if (!canAccessAdmin()) {
-        console.log('🔒 AdminGuard: Usuario no es admin, redirigiendo a /');
         router.push('/');
         return;
       }
 
       // Si se requiere superadmin y el usuario no lo es, redirigir a admin
       if (requireSuperAdmin && userRole !== 'superadmin') {
-        console.log('🔒 AdminGuard: Se requiere superadmin, redirigiendo a /admin');
         router.push('/admin');
         return;
       }
-
-      console.log('✅ AdminGuard: Usuario autorizado, permitiendo acceso');
     }
   }, [user, profile, loading, canAccessAdmin, userRole, router, requireSuperAdmin]);
 

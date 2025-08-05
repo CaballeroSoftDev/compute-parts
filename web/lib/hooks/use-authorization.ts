@@ -35,13 +35,6 @@ export function useAuthorization() {
       (contextRole && ['admin', 'superadmin'].includes(contextRole)) ||
       (profileRole && ['admin', 'superadmin'].includes(profileRole));
 
-    console.log('🔍 Auth Debug - canAccessAdmin:', {
-      contextRole,
-      profileRole,
-      isAdmin,
-      profile: profile ? { id: profile.id, role: profile.role } : null,
-    });
-
     return isAdmin;
   };
 
