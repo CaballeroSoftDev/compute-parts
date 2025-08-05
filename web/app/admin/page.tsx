@@ -1,99 +1,36 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { TrendingUp, TrendingDown, Package, ShoppingCart, Users, DollarSign, Eye, ArrowUpRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, Package, ShoppingCart, Users, DollarSign, Eye, ArrowUpRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 
-// Datos de ejemplo para el dashboard
-const stats = [
-  {
-    title: 'Ventas Totales',
-    value: '$45,231.89',
-    change: '+20.1%',
-    trend: 'up',
-    icon: DollarSign,
-  },
-  {
-    title: 'Pedidos',
-    value: '2,350',
-    change: '+180.1%',
-    trend: 'up',
-    icon: ShoppingCart,
-  },
-  {
-    title: 'Productos',
-    value: '12,234',
-    change: '+19%',
-    trend: 'up',
-    icon: Package,
-  },
-  {
-    title: 'Usuarios Activos',
-    value: '573',
-    change: '+201',
-    trend: 'up',
-    icon: Users,
-  },
-];
-
-const recentOrders = [
-  {
-    id: '#3210',
-    customer: 'Ana García',
-    email: 'ana.garcia@email.com',
-    amount: '$1,249.99',
-    status: 'Completado',
-  },
-  {
-    id: '#3209',
-    customer: 'Carlos López',
-    email: 'carlos.lopez@email.com',
-    amount: '$899.99',
-    status: 'Procesando',
-  },
-  {
-    id: '#3208',
-    customer: 'María Rodríguez',
-    email: 'maria.rodriguez@email.com',
-    amount: '$1,599.99',
-    status: 'Enviado',
-  },
-  {
-    id: '#3207',
-    customer: 'Juan Pérez',
-    email: 'juan.perez@email.com',
-    amount: '$299.99',
-    status: 'Pendiente',
-  },
-];
-
-const topProducts = [
-  {
-    name: 'NVIDIA GeForce RTX 4080',
-    sales: 89,
-    revenue: '$106,711',
-    trend: 'up',
-  },
-  {
-    name: 'Intel Core i7-13700K',
-    sales: 67,
-    revenue: '$26,799',
-    trend: 'up',
-  },
-  {
-    name: 'Corsair Vengeance LPX 32GB',
-    sales: 45,
-    revenue: '$6,749',
-    trend: 'down',
-  },
-  {
-    name: 'Samsung 980 PRO 1TB',
-    sales: 38,
-    revenue: '$7,599',
-    trend: 'up',
-  },
-];
+// Tipos de datos
+interface DashboardStats {
+  totalSales: number;
+  totalOrders: number;
+  totalProducts: number;
+  totalUsers: number;
+  recentOrders: Array<{
+    id: string;
+    order_number: string;
+    customer_name: string;
+    customer_email: string;
+    total_amount: number;
+    status: string;
+    created_at: string;
+  }>;
+  topProducts: Array<{
+    name: string;
+    sales: number;
+    revenue: number;
+  }>;
+}
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -105,12 +42,113 @@ const getStatusBadge = (status: string) => {
       return <Badge className="bg-purple-100 text-purple-800">Enviado</Badge>;
     case 'Pendiente':
       return <Badge className="bg-yellow-100 text-yellow-800">Pendiente</Badge>;
+    case 'Cancelado':
+      return <Badge className="bg-red-100 text-red-800">Cancelado</Badge>;
     default:
       return <Badge variant="secondary">{status}</Badge>;
   }
 };
 
 export default function AdminDashboard() {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+
+      // Obtener todas las estadísticas del dashboard con una sola llamada
+      const { data: dashboardData, error } = await supabase.rpc('get_dashboard_stats');
+
+      if (error) throw error;
+
+      if (!dashboardData || dashboardData.length === 0) {
+        throw new Error('No se pudieron obtener los datos del dashboard');
+      }
+
+      const stats = dashboardData[0];
+
+      setStats({
+        totalSales: Number(stats.total_sales),
+        totalOrders: Number(stats.total_orders),
+        totalProducts: Number(stats.total_products),
+        totalUsers: Number(stats.total_users),
+        recentOrders: stats.recent_orders || [],
+        topProducts: stats.top_products || []
+      });
+
+    } catch (error) {
+      console.error('Error cargando datos del dashboard:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudieron cargar los datos del dashboard',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Cargando dashboard...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-500">No se pudieron cargar los datos del dashboard</p>
+          <Button onClick={fetchDashboardData} className="mt-4">
+            Reintentar
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const dashboardStats = [
+    {
+      title: 'Ventas Totales',
+      value: `$${stats.totalSales.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      change: '+20.1%',
+      trend: 'up' as const,
+      icon: DollarSign,
+    },
+    {
+      title: 'Pedidos',
+      value: stats.totalOrders.toString(),
+      change: '+180.1%',
+      trend: 'up' as const,
+      icon: ShoppingCart,
+    },
+    {
+      title: 'Productos',
+      value: stats.totalProducts.toString(),
+      change: '+19%',
+      trend: 'up' as const,
+      icon: Package,
+    },
+    {
+      title: 'Usuarios Registrados',
+      value: stats.totalUsers.toString(),
+      change: '+201',
+      trend: 'up' as const,
+      icon: Users,
+    },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
@@ -126,7 +164,7 @@ export default function AdminDashboard() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => {
+        {dashboardStats.map((stat) => {
           const Icon = stat.icon;
           const TrendIcon = stat.trend === 'up' ? TrendingUp : TrendingDown;
           return (
@@ -167,38 +205,48 @@ export default function AdminDashboard() {
             </Link>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Monto</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentOrders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{order.customer}</div>
-                        <div className="text-sm text-gray-500">{order.id}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{order.amount}</TableCell>
-                    <TableCell>{getStatusBadge(order.status)}</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+            {stats.recentOrders.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Monto</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead></TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {stats.recentOrders.map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{order.customer_name}</div>
+                          <div className="text-sm text-gray-500">{order.order_number}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        ${Number(order.total_amount).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(order.status)}</TableCell>
+                      <TableCell>
+                        <Link href={`/admin/orders`}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                No hay pedidos recientes
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -221,8 +269,8 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {topProducts.map((product, index) => {
-                const TrendIcon = product.trend === 'up' ? TrendingUp : TrendingDown;
+              {stats.topProducts.map((product, index) => {
+                const TrendIcon = TrendingUp; // Por ahora siempre up
                 return (
                   <div
                     key={product.name}
@@ -238,14 +286,12 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-medium">{product.revenue}</div>
+                      <div className="text-sm font-medium">
+                        ${product.revenue.toLocaleString('es-MX')}
+                      </div>
                       <div className="flex items-center text-xs">
-                        <TrendIcon
-                          className={`mr-1 h-3 w-3 ${product.trend === 'up' ? 'text-green-500' : 'text-red-500'}`}
-                        />
-                        <span className={product.trend === 'up' ? 'text-green-500' : 'text-red-500'}>
-                          {product.trend === 'up' ? '+12%' : '-5%'}
-                        </span>
+                        <TrendIcon className="mr-1 h-3 w-3 text-green-500" />
+                        <span className="text-green-500">+12%</span>
                       </div>
                     </div>
                   </div>
