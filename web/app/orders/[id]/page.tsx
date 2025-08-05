@@ -300,7 +300,7 @@ export default function OrderDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 text-sm">
-                    <p className="text-blue-600 font-medium">Tu pedido estará listo para recoger en 2 días hábiles</p>
+                    <p className="font-medium text-blue-600">Tu pedido estará listo para recoger en 2 días hábiles</p>
                     <p className="text-gray-600">Tienes 2 días para recoger tu pedido en nuestra tienda física</p>
                   </div>
                 </CardContent>

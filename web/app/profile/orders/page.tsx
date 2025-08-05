@@ -282,7 +282,9 @@ export default function OrdersPage() {
                           <Package className="mt-0.5 h-4 w-4 text-blue-600" />
                           <div>
                             <h4 className="font-medium text-blue-800">Recoger en tienda</h4>
-                            <p className="text-sm text-blue-600">Tu pedido estará listo para recoger en 2 días hábiles</p>
+                            <p className="text-sm text-blue-600">
+                              Tu pedido estará listo para recoger en 2 días hábiles
+                            </p>
                           </div>
                         </div>
                       </div>

@@ -44,11 +44,11 @@ function formatAddressObject(address: ShippingAddress): string {
     `${address.first_name} ${address.last_name}`,
     address.address_line_1,
     `${address.city}, ${address.state} ${address.postal_code}`,
-    address.country
+    address.country,
   ];
 
   // Filtrar partes vacías y unir con saltos de línea
-  return parts.filter(part => part && part.trim()).join('\n');
+  return parts.filter((part) => part && part.trim()).join('\n');
 }
 
 /**
@@ -121,4 +121,4 @@ export function getAddressPhone(address: string | ShippingAddress | null): strin
   }
 
   return '';
-} 
+}

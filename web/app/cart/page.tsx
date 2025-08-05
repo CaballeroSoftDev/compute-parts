@@ -478,13 +478,17 @@ export default function CartPage() {
                           image_url: item.product?.product_images?.[0]?.image_url,
                         })),
                         // Agregar el envío como un item adicional si hay costo de envío
-                        ...(shippingCost > 0 ? [{
-                          id: 'shipping',
-                          name: 'Costo de envío',
-                          price: shippingCost,
-                          quantity: 1,
-                          image_url: undefined,
-                        }] : []),
+                        ...(shippingCost > 0
+                          ? [
+                              {
+                                id: 'shipping',
+                                name: 'Costo de envío',
+                                price: shippingCost,
+                                quantity: 1,
+                                image_url: undefined,
+                              },
+                            ]
+                          : []),
                       ]}
                       orderData={{
                         payment_method: 'PayPal',

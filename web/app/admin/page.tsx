@@ -5,7 +5,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { TrendingUp, TrendingDown, Package, ShoppingCart, Users, DollarSign, Eye, ArrowUpRight, Loader2 } from 'lucide-react';
+import {
+  TrendingUp,
+  TrendingDown,
+  Package,
+  ShoppingCart,
+  Users,
+  DollarSign,
+  Eye,
+  ArrowUpRight,
+  Loader2,
+} from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -79,9 +89,8 @@ export default function AdminDashboard() {
         totalProducts: Number(stats.total_products),
         totalUsers: Number(stats.total_users),
         recentOrders: stats.recent_orders || [],
-        topProducts: stats.top_products || []
+        topProducts: stats.top_products || [],
       });
-
     } catch (error) {
       console.error('Error cargando datos del dashboard:', error);
       toast({
@@ -110,7 +119,10 @@ export default function AdminDashboard() {
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <p className="text-gray-500">No se pudieron cargar los datos del dashboard</p>
-          <Button onClick={fetchDashboardData} className="mt-4">
+          <Button
+            onClick={fetchDashboardData}
+            className="mt-4"
+          >
             Reintentar
           </Button>
         </div>
@@ -225,7 +237,11 @@ export default function AdminDashboard() {
                         </div>
                       </TableCell>
                       <TableCell className="font-medium">
-                        ${Number(order.total_amount).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        $
+                        {Number(order.total_amount).toLocaleString('es-MX', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </TableCell>
                       <TableCell>{getStatusBadge(order.status)}</TableCell>
                       <TableCell>
@@ -243,9 +259,7 @@ export default function AdminDashboard() {
                 </TableBody>
               </Table>
             ) : (
-              <div className="text-center py-8 text-gray-500">
-                No hay pedidos recientes
-              </div>
+              <div className="py-8 text-center text-gray-500">No hay pedidos recientes</div>
             )}
           </CardContent>
         </Card>
@@ -286,9 +300,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-medium">
-                        ${product.revenue.toLocaleString('es-MX')}
-                      </div>
+                      <div className="text-sm font-medium">${product.revenue.toLocaleString('es-MX')}</div>
                       <div className="flex items-center text-xs">
                         <TrendIcon className="mr-1 h-3 w-3 text-green-500" />
                         <span className="text-green-500">+12%</span>
