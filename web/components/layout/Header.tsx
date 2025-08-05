@@ -9,6 +9,7 @@ import { useFavorites } from '@/lib/favorites-context';
 import { useAuth } from '@/lib/auth-context';
 import { useAuthorization } from '@/lib/hooks/use-authorization';
 import { useCart } from '@/lib/hooks/use-cart';
+import { AuthDebug } from '@/components/debug/AuthDebug';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +21,7 @@ import {
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
   const { favorites } = useFavorites();
   const { user, signOut, profile } = useAuth();
   const { canAccessAdmin } = useAuthorization();
@@ -76,6 +78,18 @@ export function Header() {
 
           {/* Action buttons */}
           <div className="flex items-center space-x-4">
+            {/* Debug button - solo en desarrollo */}
+            {process.env.NODE_ENV === 'development' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowDebug(!showDebug)}
+                className="text-xs"
+              >
+                🔍 Debug
+              </Button>
+            )}
+
             <Link href="/favorites">
               <Button
                 variant="ghost"
@@ -110,6 +124,8 @@ export function Header() {
                 )}
               </Button>
             </Link>
+
+            {/* User menu */}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -122,12 +138,15 @@ export function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
-                  className="w-64"
+                  className="w-56"
                 >
-                  <DropdownMenuLabel className="font-normal">
+                  <DropdownMenuLabel>
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">
                         {profile?.first_name} {profile?.last_name}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
                       </p>
                     </div>
                   </DropdownMenuLabel>
@@ -189,28 +208,24 @@ export function Header() {
         </div>
       </div>
 
+      {/* Debug panel - solo en desarrollo */}
+      {process.env.NODE_ENV === 'development' && showDebug && (
+        <div className="border-t bg-gray-50 p-4">
+          <AuthDebug />
+        </div>
+      )}
+
       {/* Mobile menu */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50"
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
-          <div className="fixed inset-y-0 left-0 w-80 bg-white shadow-xl sm:w-96">
+          <div className="fixed inset-0 bg-black bg-opacity-50" />
+          <div className="fixed inset-y-0 left-0 flex w-80 flex-col bg-white">
             <div className="flex h-16 items-center justify-between border-b px-4">
-              <Link
-                href="/"
-                className="flex items-center"
-              >
-                <span className="text-xl font-bold">
-                  Compu<span className="text-[#007BFF]">Parts</span>
-                </span>
-              </Link>
+              <span className="text-lg font-semibold">Menú</span>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
               >
                 <X className="h-6 w-6" />
               </Button>
@@ -263,7 +278,7 @@ export function Header() {
                       signOut();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="block w-full rounded-md px-3 py-2 text-left text-base font-medium text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
+                    className="block w-full rounded-md px-3 py-2 text-left text-base font-medium text-red-600 transition-colors hover:bg-red-50"
                   >
                     Cerrar Sesión
                   </button>

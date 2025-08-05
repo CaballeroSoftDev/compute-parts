@@ -8,6 +8,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    storageKey: 'supabase.auth.token',
   },
 });
 
@@ -27,6 +29,7 @@ export type Database = {
           postal_code: string | null;
           state: string | null;
           country: string | null;
+          role: string | null;
           is_first_purchase: boolean | null;
           email_verified: boolean | null;
           notifications_enabled: boolean | null;
@@ -44,6 +47,7 @@ export type Database = {
           postal_code?: string | null;
           state?: string | null;
           country?: string | null;
+          role?: string | null;
           is_first_purchase?: boolean | null;
           email_verified?: boolean | null;
           notifications_enabled?: boolean | null;
@@ -61,6 +65,7 @@ export type Database = {
           postal_code?: string | null;
           state?: string | null;
           country?: string | null;
+          role?: string | null;
           is_first_purchase?: boolean | null;
           email_verified?: boolean | null;
           notifications_enabled?: boolean | null;
