@@ -68,7 +68,7 @@ export function useAuthOrders() {
 
           // Usar CashOrderService para órdenes de efectivo
           const newOrder = await CashOrderService.createCashOrder(orderData as any, user.id);
-          
+
           // Convertir el resultado al tipo Order
           const orderResult: Order = {
             id: newOrder.id,
@@ -77,11 +77,11 @@ export function useAuthOrders() {
             status: newOrder.status as any,
             payment_status: newOrder.payment_status as any,
             payment_method: 'Efectivo',
-            subtotal: orderData.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0,
+            subtotal: orderData.items?.reduce((sum, item) => sum + item.price * item.quantity, 0) || 0,
             tax_amount: 0,
             shipping_amount: orderData.shipping_method === 'delivery' ? 150 : 0, // Valor por defecto
             discount_amount: 0,
-            total_amount: orderData.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0,
+            total_amount: orderData.items?.reduce((sum, item) => sum + item.price * item.quantity, 0) || 0,
             shipping_address_id: undefined, // No está en CreateOrderData
             shipping_address: orderData.shipping_address,
             notes: orderData.notes,
@@ -92,7 +92,7 @@ export function useAuthOrders() {
               method: 'cash',
             },
           };
-          
+
           setCurrentOrder(orderResult);
           toast({
             title: 'Orden creada',

@@ -24,7 +24,7 @@ export function AdminGuard({ children, requireSuperAdmin = false }: AdminGuardPr
         profile: !!profile,
         canAccessAdmin: canAccessAdmin(),
         userRole,
-        requireSuperAdmin
+        requireSuperAdmin,
       });
 
       // Si no hay usuario, redirigir a login

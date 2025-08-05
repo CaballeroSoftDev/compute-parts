@@ -7,7 +7,7 @@ export async function middleware(request: NextRequest) {
   // Solo aplicar middleware a rutas de admin
   if (pathname.startsWith('/admin')) {
     console.log('🔒 Middleware: Verificando acceso a ruta admin:', pathname);
-    
+
     // Para rutas de admin, permitir el acceso y dejar que el componente AdminGuard maneje la autorización
     // Esto es más eficiente porque el AdminGuard puede acceder al contexto de autenticación del cliente
     console.log('✅ Middleware: Permitiendo acceso a ruta admin, delegando autorización a AdminGuard');
@@ -30,5 +30,3 @@ export const config = {
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };
-
-// ya funcion, ahora un usuario admin o superadmin puede visualizar todos los pedidos realizados

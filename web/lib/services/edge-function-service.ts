@@ -168,11 +168,7 @@ export class EdgeFunctionService {
    * Obtener información de todas las Edge Functions disponibles
    */
   static async getAvailableFunctions(): Promise<string[]> {
-    const functions = [
-      'capture-payment',
-      'create-paypal-order', 
-      'create-cash-order'
-    ];
+    const functions = ['capture-payment', 'create-paypal-order', 'create-cash-order'];
 
     const availableFunctions: string[] = [];
 

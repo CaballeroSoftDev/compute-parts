@@ -4,24 +4,27 @@ export class CashOrderService {
   /**
    * Crear una orden de pago en efectivo
    */
-  static async createCashOrder(orderData: {
-    payment_method: 'Efectivo';
-    shipping_method: 'pickup' | 'delivery';
-    shipping_address?: any;
-    shipping_address_id?: string;
-    subtotal: number;
-    shipping_amount: number;
-    total_amount: number;
-    notes?: string;
-    items: Array<{
-      product_id: string;
-      name: string;
-      price: number;
-      quantity: number;
-      image_url?: string;
-      sku?: string;
-    }>;
-  }, userId?: string): Promise<{
+  static async createCashOrder(
+    orderData: {
+      payment_method: 'Efectivo';
+      shipping_method: 'pickup' | 'delivery';
+      shipping_address?: any;
+      shipping_address_id?: string;
+      subtotal: number;
+      shipping_amount: number;
+      total_amount: number;
+      notes?: string;
+      items: Array<{
+        product_id: string;
+        name: string;
+        price: number;
+        quantity: number;
+        image_url?: string;
+        sku?: string;
+      }>;
+    },
+    userId?: string
+  ): Promise<{
     id: string;
     order_number: string;
     status: string;
@@ -153,4 +156,4 @@ export class CashOrderService {
       errors,
     };
   }
-} 
+}

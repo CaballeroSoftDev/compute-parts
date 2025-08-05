@@ -9,7 +9,6 @@ import { useFavorites } from '@/lib/favorites-context';
 import { useAuth } from '@/lib/auth-context';
 import { useAuthorization } from '@/lib/hooks/use-authorization';
 import { useCart } from '@/lib/hooks/use-cart';
-import { AuthDebug } from '@/components/debug/AuthDebug';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +20,6 @@ import {
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showDebug, setShowDebug] = useState(false);
   const { favorites } = useFavorites();
   const { user, signOut, profile } = useAuth();
   const { canAccessAdmin } = useAuthorization();
@@ -78,18 +76,6 @@ export function Header() {
 
           {/* Action buttons */}
           <div className="flex items-center space-x-4">
-            {/* Debug button - solo en desarrollo */}
-            {process.env.NODE_ENV === 'development' && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowDebug(!showDebug)}
-                className="text-xs"
-              >
-                🔍 Debug
-              </Button>
-            )}
-
             <Link href="/favorites">
               <Button
                 variant="ghost"
@@ -100,13 +86,14 @@ export function Header() {
                 {favorites.length > 0 && (
                   <Badge
                     variant="destructive"
-                    className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center p-0 text-xs"
+                    className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-xs"
                   >
                     {favorites.length}
                   </Badge>
                 )}
               </Button>
             </Link>
+
             <Link href="/cart">
               <Button
                 variant="ghost"
@@ -117,7 +104,7 @@ export function Header() {
                 {itemCount > 0 && (
                   <Badge
                     variant="destructive"
-                    className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center p-0 text-xs"
+                    className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-xs"
                   >
                     {itemCount}
                   </Badge>
@@ -125,13 +112,13 @@ export function Header() {
               </Button>
             </Link>
 
-            {/* User menu */}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
+                    className="relative"
                   >
                     <User className="h-5 w-5" />
                   </Button>
@@ -145,49 +132,43 @@ export function Header() {
                       <p className="text-sm font-medium leading-none">
                         {profile?.first_name} {profile?.last_name}
                       </p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {user.email}
-                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    asChild
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <Link href="/profile">
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/profile"
+                      className="flex items-center"
+                    >
                       <User className="mr-2 h-4 w-4" />
                       Mi Perfil
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    asChild
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <Link href="/orders">
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/orders"
+                      className="flex items-center"
+                    >
                       <Package className="mr-2 h-4 w-4" />
                       Mis Pedidos
                     </Link>
                   </DropdownMenuItem>
                   {canAccessAdmin() && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        asChild
-                        style={{ cursor: 'pointer' }}
+                    <DropdownMenuItem asChild>
+                      <Link
+                        href="/admin"
+                        className="flex items-center"
                       >
-                        <Link href="/admin">
-                          <Shield className="mr-2 h-4 w-4" />
-                          Panel Admin
-                        </Link>
-                      </DropdownMenuItem>
-                    </>
+                        <Shield className="mr-2 h-4 w-4" />
+                        Panel Admin
+                      </Link>
+                    </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={signOut}
-                    className="text-red-600"
-                    style={{ cursor: 'pointer' }}
+                    onClick={() => signOut()}
+                    className="text-red-600 focus:text-red-600"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     Cerrar Sesión
@@ -207,13 +188,6 @@ export function Header() {
           </div>
         </div>
       </div>
-
-      {/* Debug panel - solo en desarrollo */}
-      {process.env.NODE_ENV === 'development' && showDebug && (
-        <div className="border-t bg-gray-50 p-4">
-          <AuthDebug />
-        </div>
-      )}
 
       {/* Mobile menu */}
       {isMobileMenuOpen && (

@@ -30,17 +30,18 @@ export function useAuthorization() {
     // Verificar tanto el rol del contexto como el del perfil
     const contextRole = userRole;
     const profileRole = profile?.role as UserRole;
-    
-    const isAdmin = (contextRole && ['admin', 'superadmin'].includes(contextRole)) ||
-                   (profileRole && ['admin', 'superadmin'].includes(profileRole));
-    
+
+    const isAdmin =
+      (contextRole && ['admin', 'superadmin'].includes(contextRole)) ||
+      (profileRole && ['admin', 'superadmin'].includes(profileRole));
+
     console.log('🔍 Auth Debug - canAccessAdmin:', {
       contextRole,
       profileRole,
       isAdmin,
-      profile: profile ? { id: profile.id, role: profile.role } : null
+      profile: profile ? { id: profile.id, role: profile.role } : null,
     });
-    
+
     return isAdmin;
   };
 
