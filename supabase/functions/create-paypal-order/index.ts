@@ -113,8 +113,19 @@ serve(async (req) => {
     }, 0)
 
     console.log('💰 Cálculo del item_total:')
+    console.log('Items para PayPal:', paypalItems)
+    paypalItems.forEach((item, index) => {
+      const itemValue = parseFloat(item.unit_amount.value) * parseInt(item.quantity)
+      console.log(`Item ${index + 1}: ${item.unit_amount.value} × ${item.quantity} = ${itemValue}`)
+    })
     console.log('Item total calculado:', itemTotal)
     console.log('Amount recibido:', amount)
+
+    // Verificar que el item_total coincida con el amount
+    if (Math.abs(itemTotal - amount) > 0.01) {
+      console.warn('⚠️ Advertencia: item_total no coincide con amount')
+      console.warn(`item_total: ${itemTotal}, amount: ${amount}`)
+    }
 
     const paypalOrderData = {
       intent: 'CAPTURE',

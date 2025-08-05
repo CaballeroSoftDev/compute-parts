@@ -194,20 +194,6 @@ export default function OrdersPage() {
                     </div>
                   )}
 
-                  {order.shipping_address && (
-                    <div className="mt-4 rounded-lg bg-gray-50 p-3">
-                      <div className="mb-2 flex items-center gap-2">
-                        <UserIcon className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm font-medium text-gray-700">Dirección de Envío:</span>
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {typeof order.shipping_address === 'string'
-                          ? order.shipping_address
-                          : `${order.shipping_address.address_line_1}, ${order.shipping_address.city}`}
-                      </div>
-                    </div>
-                  )}
-
                   {order.notes && (
                     <div className="mt-4 rounded-lg bg-blue-50 p-3">
                       <div className="text-sm text-blue-700">

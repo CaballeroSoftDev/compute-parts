@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils/formatters';
+import { getAddressName, getAddressLocation, getAddressPhone } from '@/lib/utils/address-formatter';
 import {
   CalendarIcon,
   PackageIcon,
@@ -19,6 +20,8 @@ import {
   ArrowLeftIcon,
   TruckIcon,
   ReceiptIcon,
+  Package,
+  Phone,
 } from 'lucide-react';
 import Link from 'next/link';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -287,7 +290,53 @@ export default function OrderDetailPage() {
             </Card>
 
             {/* Información de Envío */}
-            {order.shipping_address && (
+            {order.shipping_amount === 0 ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Package className="h-5 w-5" />
+                    Recoger en Tienda
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 text-sm">
+                    <p className="text-blue-600 font-medium">Tu pedido estará listo para recoger en 2 días hábiles</p>
+                    <p className="text-gray-600">Tienes 2 días para recoger tu pedido en nuestra tienda física</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : order.shipping_address_data ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPinIcon className="h-5 w-5" />
+                    Dirección de Envío
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 text-sm">
+                    <div className="rounded-lg bg-green-50 p-3">
+                      <div className="flex items-start gap-2">
+                        <MapPinIcon className="mt-0.5 h-4 w-4 text-green-600" />
+                        <div className="flex-1">
+                          <h4 className="font-medium text-green-800">Envío a domicilio</h4>
+                          <div className="mt-1 space-y-1 text-sm text-green-700">
+                            <p className="font-medium">{getAddressName(order.shipping_address_data)}</p>
+                            <p>{getAddressLocation(order.shipping_address_data)}</p>
+                            {getAddressPhone(order.shipping_address_data) && (
+                              <div className="flex items-center gap-1">
+                                <Phone className="h-3 w-3" />
+                                <span>{getAddressPhone(order.shipping_address_data)}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : order.shipping_address ? (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -297,7 +346,15 @@ export default function OrderDetailPage() {
                 </CardHeader>
                 <CardContent>
                   {typeof order.shipping_address === 'string' ? (
-                    <p className="text-sm">{order.shipping_address}</p>
+                    <div className="rounded-lg bg-yellow-50 p-3">
+                      <div className="flex items-start gap-2">
+                        <TruckIcon className="mt-0.5 h-4 w-4 text-yellow-600" />
+                        <div>
+                          <h4 className="font-medium text-yellow-800">Sin dirección de envío</h4>
+                          <p className="text-sm text-yellow-600">No se ha proporcionado dirección de envío</p>
+                        </div>
+                      </div>
+                    </div>
                   ) : (
                     <div className="space-y-2 text-sm">
                       <p>
@@ -324,7 +381,7 @@ export default function OrderDetailPage() {
                   )}
                 </CardContent>
               </Card>
-            )}
+            ) : null}
           </div>
 
           {/* Resumen y Dirección */}
@@ -361,46 +418,6 @@ export default function OrderDetailPage() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Información de Envío */}
-            {order.shipping_address && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPinIcon className="h-5 w-5" />
-                    Dirección de Envío
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {typeof order.shipping_address === 'string' ? (
-                    <p className="text-sm">{order.shipping_address}</p>
-                  ) : (
-                    <div className="space-y-2 text-sm">
-                      <p>
-                        <strong>Nombre:</strong> {order.shipping_address.first_name} {order.shipping_address.last_name}
-                      </p>
-                      <p>
-                        <strong>Dirección:</strong> {order.shipping_address.address_line_1}
-                      </p>
-                      <p>
-                        <strong>Ciudad:</strong> {order.shipping_address.city}
-                      </p>
-                      <p>
-                        <strong>Estado:</strong> {order.shipping_address.state}
-                      </p>
-                      <p>
-                        <strong>Código Postal:</strong> {order.shipping_address.postal_code}
-                      </p>
-                      {order.shipping_address.phone && (
-                        <p>
-                          <strong>Teléfono:</strong> {order.shipping_address.phone}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
           </div>
         </div>
       </div>

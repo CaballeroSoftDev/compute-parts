@@ -216,7 +216,8 @@ export class OrderService {
 						price,
 						sku
 					)
-				)
+				),
+				shipping_address_data:shipping_addresses(*)
 			`,
         { count: 'exact' }
       )

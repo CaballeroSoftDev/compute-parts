@@ -469,13 +469,23 @@ export default function CartPage() {
                       currency="MXN"
                       disabled={creating || processingPayment}
                       className="w-full"
-                      cartItems={items.map((item) => ({
-                        id: item.product_id,
-                        name: item.product?.name || 'Producto',
-                        price: item.product?.price || 0,
-                        quantity: item.quantity,
-                        image_url: item.product?.product_images?.[0]?.image_url,
-                      }))}
+                      cartItems={[
+                        ...items.map((item) => ({
+                          id: item.product_id,
+                          name: item.product?.name || 'Producto',
+                          price: item.product?.price || 0,
+                          quantity: item.quantity,
+                          image_url: item.product?.product_images?.[0]?.image_url,
+                        })),
+                        // Agregar el envío como un item adicional si hay costo de envío
+                        ...(shippingCost > 0 ? [{
+                          id: 'shipping',
+                          name: 'Costo de envío',
+                          price: shippingCost,
+                          quantity: 1,
+                          image_url: undefined,
+                        }] : []),
+                      ]}
                       orderData={{
                         payment_method: 'PayPal',
                         shipping_method: shippingMethod,

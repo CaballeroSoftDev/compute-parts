@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
+import { formatShippingAddress, getAddressName, getAddressLocation, getAddressPhone } from '@/lib/utils/address-formatter';
 
 // Tipos de datos
 interface OrderItem {
@@ -230,7 +231,7 @@ export default function OrdersPage() {
         }
 
         // Transformar los datos al formato esperado por la interfaz
-        const formattedOrders = data.map((order) => ({
+        const formattedOrders = data.map((order: any) => ({
           id: order.order_number,
           customer: {
             name: order.customer_name,
@@ -242,11 +243,15 @@ export default function OrdersPage() {
           status: order.status,
           paymentStatus: order.payment_status,
           paymentMethod: order.payment_method,
-          shippingAddress: order.shipping_address
-            ? typeof order.shipping_address === 'string'
-              ? order.shipping_address
-              : JSON.stringify(order.shipping_address)
-            : 'Sin dirección',
+          shippingAddress: order.shipping_amount === 0 
+            ? 'Recoger en tienda' 
+            : order.shipping_address_data
+              ? order.shipping_address_data
+              : order.shipping_address
+                ? typeof order.shipping_address === 'string'
+                  ? order.shipping_address
+                  : JSON.stringify(order.shipping_address)
+                : 'Sin dirección',
           trackingNumber: order.tracking_number,
           date: new Date(order.created_at).toLocaleDateString('es-MX'),
           notes: order.notes,
@@ -710,8 +715,48 @@ export default function OrdersPage() {
                 className="space-y-4"
               >
                 <div>
-                  <Label className="text-sm font-medium">Dirección de Envío</Label>
-                  <p className="mt-1 text-sm">{selectedOrder.shippingAddress}</p>
+                  <Label className="text-sm font-medium">Información de Envío</Label>
+                  {selectedOrder.shippingAddress === 'Recoger en tienda' ? (
+                    <div className="mt-2 rounded-lg bg-blue-50 p-3">
+                      <div className="flex items-center gap-2">
+                        <Package className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm font-medium text-blue-800">Recoger en tienda</span>
+                      </div>
+                      <p className="mt-1 text-xs text-blue-600">
+                        El cliente recogerá su pedido en la tienda física
+                      </p>
+                    </div>
+                  ) : selectedOrder.shippingAddress === 'Sin dirección' ? (
+                    <div className="mt-2 rounded-lg bg-yellow-50 p-3">
+                      <div className="flex items-center gap-2">
+                        <Truck className="h-4 w-4 text-yellow-600" />
+                        <span className="text-sm font-medium text-yellow-800">Sin dirección de envío</span>
+                      </div>
+                      <p className="mt-1 text-xs text-yellow-600">
+                        No se ha proporcionado dirección de envío
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="mt-2 rounded-lg bg-green-50 p-3">
+                      <div className="flex items-center gap-2">
+                        <Truck className="h-4 w-4 text-green-600" />
+                        <span className="text-sm font-medium text-green-800">Envío a domicilio</span>
+                      </div>
+                      <div className="mt-2 space-y-1 text-xs text-green-700">
+                        {typeof selectedOrder.shippingAddress === 'object' && selectedOrder.shippingAddress ? (
+                          <>
+                            <p className="font-medium">{getAddressName(selectedOrder.shippingAddress)}</p>
+                            <p>{getAddressLocation(selectedOrder.shippingAddress)}</p>
+                            {getAddressPhone(selectedOrder.shippingAddress) && (
+                              <p>📞 {getAddressPhone(selectedOrder.shippingAddress)}</p>
+                            )}
+                          </>
+                        ) : (
+                          <p>{selectedOrder.shippingAddress}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 {selectedOrder.trackingNumber && (
                   <div>

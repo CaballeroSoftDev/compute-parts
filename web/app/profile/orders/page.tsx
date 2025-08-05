@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useOrders } from '@/lib/hooks/use-orders';
 import { useToast } from '@/hooks/use-toast';
+import { getAddressName, getAddressLocation, getAddressPhone } from '@/lib/utils/address-formatter';
 import {
   ChevronLeft,
   Package,
@@ -23,6 +24,7 @@ import {
   XCircle,
   Clock,
   Loader2,
+  Phone,
 } from 'lucide-react';
 
 const getStatusColor = (status: string) => {
@@ -272,21 +274,51 @@ export default function OrdersPage() {
                   </div>
 
                   {/* Información de envío */}
-                  {order.shipping_address_data && (
+                  {order.shipping_amount === 0 ? (
                     <>
                       <Separator className="my-4" />
-                      <div className="flex items-start gap-2">
-                        <MapPin className="mt-0.5 h-4 w-4 text-gray-500" />
-                        <div>
-                          <h4 className="font-medium">Dirección de envío:</h4>
-                          <p className="text-sm text-gray-600">
-                            {order.shipping_address_data.first_name} {order.shipping_address_data.last_name}
-                          </p>
-                          <p className="text-sm text-gray-600">{order.shipping_address_data.address_line_1}</p>
-                          <p className="text-sm text-gray-600">
-                            {order.shipping_address_data.city}, {order.shipping_address_data.state}{' '}
-                            {order.shipping_address_data.postal_code}
-                          </p>
+                      <div className="rounded-lg bg-blue-50 p-3">
+                        <div className="flex items-start gap-2">
+                          <Package className="mt-0.5 h-4 w-4 text-blue-600" />
+                          <div>
+                            <h4 className="font-medium text-blue-800">Recoger en tienda</h4>
+                            <p className="text-sm text-blue-600">Tu pedido estará listo para recoger en 2 días hábiles</p>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  ) : order.shipping_address_data ? (
+                    <>
+                      <Separator className="my-4" />
+                      <div className="rounded-lg bg-green-50 p-3">
+                        <div className="flex items-start gap-2">
+                          <MapPin className="mt-0.5 h-4 w-4 text-green-600" />
+                          <div className="flex-1">
+                            <h4 className="font-medium text-green-800">Envío a domicilio</h4>
+                            <div className="mt-1 space-y-1 text-sm text-green-700">
+                              <p className="font-medium">{getAddressName(order.shipping_address_data)}</p>
+                              <p>{getAddressLocation(order.shipping_address_data)}</p>
+                              {getAddressPhone(order.shipping_address_data) && (
+                                <div className="flex items-center gap-1">
+                                  <Phone className="h-3 w-3" />
+                                  <span>{getAddressPhone(order.shipping_address_data)}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Separator className="my-4" />
+                      <div className="rounded-lg bg-yellow-50 p-3">
+                        <div className="flex items-start gap-2">
+                          <Truck className="mt-0.5 h-4 w-4 text-yellow-600" />
+                          <div>
+                            <h4 className="font-medium text-yellow-800">Sin dirección de envío</h4>
+                            <p className="text-sm text-yellow-600">No se ha proporcionado dirección de envío</p>
+                          </div>
                         </div>
                       </div>
                     </>
