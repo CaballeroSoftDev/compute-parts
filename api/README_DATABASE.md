@@ -37,7 +37,7 @@ Este modelo de base de datos PostgreSQL está diseñado específicamente para **
 
 ## 🏗️ Arquitectura del Esquema
 
-### 📊 **Tablas Principales**
+### 📊 **Tablas Principales (15 tablas)**
 
 | Tabla | Propósito | Relaciones |
 |-------|-----------|------------|
@@ -49,49 +49,57 @@ Este modelo de base de datos PostgreSQL está diseñado específicamente para **
 | `product_variants` | Variantes (color, tamaño) | Opcional por producto |
 | `cart_items` | Carrito de compras | Por usuario |
 | `favorites` | Productos favoritos | Por usuario |
+| `shipping_addresses` | Direcciones de envío | Por usuario |
 | `orders` | Pedidos de clientes | Central para ventas |
 | `order_items` | Items de cada pedido | Detalle de pedidos |
 | `reviews` | Reseñas y calificaciones | Por producto/usuario |
+| `coupons` | Cupones de descuento | Aplicados a pedidos |
+| `coupon_usage` | Uso de cupones | Tracking de uso |
+| `notifications` | Notificaciones del sistema | Por usuario |
+| `site_settings` | Configuración del sitio | Configuración global |
 
 ### 🔐 **Seguridad Integrada**
 
 - **Row Level Security (RLS)** habilitado en todas las tablas
-- Políticas de acceso basadas en roles de usuario
+- Políticas de acceso basadas en roles de usuario (cliente, admin, superadmin)
 - Integración nativa con Supabase Auth
 - Validaciones de datos a nivel de base de datos
 
 ### ⚡ **Optimizaciones de Rendimiento**
 
-- Índices estratégicos para consultas frecuentes
-- Búsqueda full-text en español
-- Vistas materializadas para reportes
-- Triggers automáticos para mantenimiento
+- **25+ índices** estratégicos para consultas frecuentes
+- Búsqueda full-text en español optimizada
+- **4 vistas** para reportes complejos
+- **11 triggers** automáticos para mantenimiento
 
 ## 🚀 Características Técnicas
 
-### **Tipos de Datos Avanzados**
-```sql
--- JSONB para especificaciones técnicas
-specifications JSONB
+### **Extensiones Instaladas (5)**
+- `uuid-ossp` - Generación de UUIDs
+- `pgcrypto` - Funciones criptográficas
+- `pg_stat_statements` - Estadísticas de consultas
+- `pg_graphql` - Soporte GraphQL
+- `supabase_vault` - Almacenamiento seguro
 
--- Arrays para tags
-tags TEXT[]
+### **Funciones Personalizadas (15+)**
+- `generate_order_number()` - Generación automática de números de pedido
+- `get_dashboard_stats()` - Estadísticas del dashboard
+- `get_orders_with_user_data()` - Pedidos con datos de usuario
+- `update_product_stock()` - Actualización automática de stock
+- `handle_new_user()` - Manejo de nuevos usuarios
+- `get_user_role()` - Obtención de roles de usuario
 
--- Campos de búsqueda optimizados
-to_tsvector('spanish', name || ' ' || description)
-```
+### **Vistas Optimizadas (4)**
+- `bestsellers` - Productos más vendidos
+- `orders_with_user_data` - Pedidos con información de usuario
+- `products_view` - Vista optimizada de productos
+- `sales_stats` - Estadísticas de ventas
 
-### **Funciones Automáticas**
+### **Triggers Automáticos (11)**
+- Actualización automática de timestamps
 - Generación automática de números de pedido
 - Actualización automática de stock
-- Creación automática de perfiles
-- Timestamps automáticos
-
-### **Integridad de Datos**
-- Constraints de validación
-- Foreign keys con cascade
-- Check constraints para valores válidos
-- Unique constraints donde corresponde
+- Mantenimiento de integridad de datos
 
 ## 📁 Estructura de Archivos
 
@@ -167,10 +175,11 @@ El archivo [(queries_examples.sql)](queries_examples.sql) incluye 28 consultas S
 ## 📈 Escalabilidad
 
 ### **Optimizaciones Incluidas**
-- Índices para consultas frecuentes
-- Búsqueda full-text optimizada
-- Vistas para reportes complejos
-- Triggers para mantenimiento automático
+- **25+ índices** para consultas frecuentes
+- Búsqueda full-text optimizada en español
+- **4 vistas** para reportes complejos
+- **11 triggers** para mantenimiento automático
+- **67 migraciones** aplicadas exitosamente
 
 ### **Preparado para Crecimiento**
 - Estructura normalizada
@@ -180,14 +189,33 @@ El archivo [(queries_examples.sql)](queries_examples.sql) incluye 28 consultas S
 
 ## 🔒 Seguridad
 
-### **Políticas RLS Implementadas**
-- Usuarios solo ven sus propios datos
-- Productos visibles públicamente
-- Administradores tienen acceso completo
-- Reseñas aprobadas visibles públicamente
+### **Políticas RLS Implementadas (11 tablas)**
+- **profiles**: Usuarios solo ven su propio perfil
+- **categories**: Lectura pública, escritura solo admins
+- **brands**: Lectura pública, escritura solo admins
+- **products**: Lectura pública, escritura solo admins
+- **product_images**: Lectura pública, escritura autenticados
+- **cart_items**: Usuarios solo ven su propio carrito
+- **favorites**: Usuarios solo ven sus favoritos
+- **shipping_addresses**: Usuarios solo ven sus direcciones
+- **orders**: Usuarios ven sus pedidos, admins ven todos
+- **order_items**: Acceso basado en pedidos
+- **reviews**: Lectura pública, escritura autenticados
 
 ### **Validaciones de Datos**
 - Constraints de integridad
 - Validación de precios positivos
 - Validación de cantidades de stock
 - Validación de estados de pedidos
+- Validación de roles de usuario
+
+## 📊 Estadísticas del Proyecto
+
+- **15 tablas** principales
+- **5 extensiones** instaladas
+- **67 migraciones** aplicadas
+- **15+ funciones** personalizadas
+- **11 triggers** automáticos
+- **4 vistas** optimizadas
+- **25+ índices** de rendimiento
+- **11 políticas RLS** implementadas

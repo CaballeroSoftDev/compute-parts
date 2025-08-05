@@ -1,39 +1,39 @@
-"use client"
+'use client';
 
-import { useState, useMemo } from "react"
+import { useState, useMemo } from 'react';
 
 interface FilterOptions {
-  searchTerm: string
-  filters: Record<string, string>
+  searchTerm: string;
+  filters: Record<string, string>;
 }
 
 export function useFilters<T>(items: T[], searchFields: (keyof T)[], filterFields: (keyof T)[]) {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [filters, setFilters] = useState<Record<string, string>>({})
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState<Record<string, string>>({});
 
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
       const matchesSearch =
-        searchTerm === "" ||
-        searchFields.some((field) => String(item[field]).toLowerCase().includes(searchTerm.toLowerCase()))
+        searchTerm === '' ||
+        searchFields.some((field) => String(item[field]).toLowerCase().includes(searchTerm.toLowerCase()));
 
       const matchesFilters = Object.entries(filters).every(([key, value]) => {
-        if (value === "all" || value === "") return true
-        return String(item[key as keyof T]) === value
-      })
+        if (value === 'all' || value === '') return true;
+        return String(item[key as keyof T]) === value;
+      });
 
-      return matchesSearch && matchesFilters
-    })
-  }, [items, searchTerm, filters, searchFields])
+      return matchesSearch && matchesFilters;
+    });
+  }, [items, searchTerm, filters, searchFields]);
 
   const updateFilter = (key: string, value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value }))
-  }
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
 
   const clearFilters = () => {
-    setSearchTerm("")
-    setFilters({})
-  }
+    setSearchTerm('');
+    setFilters({});
+  };
 
   return {
     searchTerm,
@@ -42,5 +42,5 @@ export function useFilters<T>(items: T[], searchFields: (keyof T)[], filterField
     updateFilter,
     clearFilters,
     filteredItems,
-  }
+  };
 }

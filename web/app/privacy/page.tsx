@@ -1,15 +1,15 @@
-import type { Metadata } from "next"
-import Link from "next/link"
-import { PageLayout } from "@/components/layout/PageLayout"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Shield, Info } from "lucide-react"
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { PageLayout } from '@/components/layout/PageLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Shield, Info } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: "Política de Privacidad | CompuParts",
+  title: 'Política de Privacidad | CompuParts',
   description:
-    "Política de privacidad de CompuParts. Información sobre cómo recopilamos, utilizamos y protegemos tus datos personales.",
-}
+    'Política de privacidad de CompuParts. Información sobre cómo recopilamos, utilizamos y protegemos tus datos personales.',
+};
 
 export default function PrivacyPage() {
   return (
@@ -47,7 +47,7 @@ export default function PrivacyPage() {
           <div className="space-y-3">
             <h2 className="text-xl font-semibold">Datos personales que recopilamos</h2>
             <p>Podemos recopilar los siguientes tipos de información personal:</p>
-            <ul className="list-disc list-inside space-y-1 pl-4">
+            <ul className="list-inside list-disc space-y-1 pl-4">
               <li>Información de identificación (nombre, apellidos, RFC)</li>
               <li>Información de contacto (correo electrónico, número de teléfono, dirección postal)</li>
               <li>Información de pago (número de tarjeta de crédito/débito, fecha de vencimiento)</li>
@@ -60,7 +60,7 @@ export default function PrivacyPage() {
           <div className="space-y-3">
             <h2 className="text-xl font-semibold">Finalidades del tratamiento de datos</h2>
             <p>Utilizamos tus datos personales para los siguientes fines:</p>
-            <ul className="list-disc list-inside space-y-1 pl-4">
+            <ul className="list-inside list-disc space-y-1 pl-4">
               <li>Procesar y gestionar tus pedidos</li>
               <li>Proporcionar servicio al cliente y soporte técnico</li>
               <li>Enviarte información sobre tus compras (confirmaciones, actualizaciones de envío)</li>
@@ -75,7 +75,7 @@ export default function PrivacyPage() {
           <div className="space-y-3">
             <h2 className="text-xl font-semibold">Base legal para el tratamiento</h2>
             <p>Tratamos tus datos personales con las siguientes bases legales:</p>
-            <ul className="list-disc list-inside space-y-1 pl-4">
+            <ul className="list-inside list-disc space-y-1 pl-4">
               <li>
                 <strong>Ejecución de un contrato:</strong> Cuando es necesario para cumplir con nuestras obligaciones
                 contractuales contigo (por ejemplo, procesar tu pedido).
@@ -98,7 +98,7 @@ export default function PrivacyPage() {
           <div className="space-y-3">
             <h2 className="text-xl font-semibold">Compartir datos personales</h2>
             <p>Podemos compartir tus datos personales con las siguientes categorías de destinatarios:</p>
-            <ul className="list-disc list-inside space-y-1 pl-4">
+            <ul className="list-inside list-disc space-y-1 pl-4">
               <li>
                 <strong>Proveedores de servicios:</strong> Empresas que nos ayudan a proporcionar nuestros servicios
                 (procesadores de pagos, servicios de envío, servicios de atención al cliente).
@@ -129,7 +129,7 @@ export default function PrivacyPage() {
               Implementamos medidas técnicas y organizativas apropiadas para proteger tus datos personales contra el
               acceso no autorizado, la pérdida, la alteración o la destrucción. Estas medidas incluyen:
             </p>
-            <ul className="list-disc list-inside space-y-1 pl-4">
+            <ul className="list-inside list-disc space-y-1 pl-4">
               <li>Encriptación de datos sensibles</li>
               <li>Acceso restringido a datos personales</li>
               <li>Monitoreo y pruebas de seguridad regulares</li>
@@ -157,7 +157,7 @@ export default function PrivacyPage() {
               De acuerdo con la Ley Federal de Protección de Datos Personales en Posesión de los Particulares, tienes
               los siguientes derechos en relación con tus datos personales:
             </p>
-            <ul className="list-disc list-inside space-y-1 pl-4">
+            <ul className="list-inside list-disc space-y-1 pl-4">
               <li>
                 <strong>Acceso:</strong> Derecho a conocer qué datos personales tenemos sobre ti y cómo los tratamos.
               </li>
@@ -175,7 +175,7 @@ export default function PrivacyPage() {
               </li>
             </ul>
             <p>Para ejercer tus derechos ARCO, puedes enviar una solicitud a privacy@compuparts.com, incluyendo:</p>
-            <ul className="list-disc list-inside space-y-1 pl-4">
+            <ul className="list-inside list-disc space-y-1 pl-4">
               <li>Tu nombre completo y dirección de correo electrónico</li>
               <li>Una copia de un documento oficial que acredite tu identidad</li>
               <li>Una descripción clara del derecho que deseas ejercer y los datos personales involucrados</li>
@@ -189,8 +189,11 @@ export default function PrivacyPage() {
             <p>
               Utilizamos cookies y tecnologías similares para mejorar tu experiencia en nuestro sitio web, recordar tus
               preferencias y mostrarte contenido relevante. Puedes obtener más información sobre cómo utilizamos las
-              cookies en nuestra{" "}
-              <Link href="/cookies" className="text-[#007BFF] hover:underline">
+              cookies en nuestra{' '}
+              <Link
+                href="/cookies"
+                className="text-[#007BFF] hover:underline"
+              >
                 Política de Cookies
               </Link>
               .
@@ -211,13 +214,13 @@ export default function PrivacyPage() {
             </p>
           </div>
 
-          <div className="p-4 bg-gray-50 rounded-lg mt-8">
-            <h3 className="font-semibold mb-2">Contacto para asuntos de privacidad:</h3>
+          <div className="mt-8 rounded-lg bg-gray-50 p-4">
+            <h3 className="mb-2 font-semibold">Contacto para asuntos de privacidad:</h3>
             <p className="text-sm">
               Si tienes preguntas o inquietudes sobre esta Política de Privacidad o el tratamiento de tus datos
               personales, puedes contactarnos en:
             </p>
-            <p className="text-sm mt-2">
+            <p className="mt-2 text-sm">
               <strong>Correo electrónico:</strong> privacy@compuparts.com
               <br />
               <strong>Teléfono:</strong> (55) 9876-5432
@@ -237,5 +240,5 @@ export default function PrivacyPage() {
         </CardContent>
       </Card>
     </PageLayout>
-  )
+  );
 }

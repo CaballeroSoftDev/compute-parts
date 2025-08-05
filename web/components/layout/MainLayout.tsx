@@ -1,14 +1,14 @@
-import type React from "react"
-import { Header } from "./Header"
-import { Footer } from "./Footer"
+import type React from 'react';
+import { Header } from './Header';
+import { Footer } from './Footer';
 
 interface MainLayoutProps {
-  children: React.ReactNode
-  showNavigation?: boolean
-  showFooter?: boolean
-  headerClassName?: string
-  footerClassName?: string
-  className?: string
+  children: React.ReactNode;
+  showNavigation?: boolean;
+  showFooter?: boolean;
+  headerClassName?: string;
+  footerClassName?: string;
+  className?: string;
 }
 
 export function MainLayout({
@@ -17,15 +17,18 @@ export function MainLayout({
   showFooter = true,
   headerClassName,
   footerClassName,
-  className = "",
+  className = '',
 }: MainLayoutProps) {
   return (
     <div className={`flex min-h-screen flex-col ${className}`}>
-      <Header showNavigation={showNavigation} className={headerClassName} />
+      <Header
+        showNavigation={showNavigation}
+        className={headerClassName}
+      />
 
       <main className="flex-1">{children}</main>
 
       {showFooter && <Footer className={footerClassName} />}
     </div>
-  )
+  );
 }

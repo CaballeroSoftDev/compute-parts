@@ -1,17 +1,17 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { ProductGrid } from "@/components/product-grid"
-import { MainLayout } from "@/components/layout/MainLayout"
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { ProductGrid } from '@/components/product-grid';
+import { MainLayout } from '@/components/layout/MainLayout';
 
 export default function Home() {
   return (
     <MainLayout>
       {/* Hero Section */}
-      <section className="py-12 md:py-24 bg-white">
+      <section className="bg-white py-12 md:py-24">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-black">
+              <h1 className="text-3xl font-bold tracking-tighter text-black sm:text-4xl md:text-5xl">
                 Componentes Electrónicos de Alta Calidad
               </h1>
               <p className="mx-auto max-w-[700px] text-gray-700 md:text-xl">
@@ -28,12 +28,12 @@ export default function Home() {
       </section>
 
       {/* Featured Products Section */}
-      <section className="py-12 bg-gray-50">
+      <section className="bg-gray-50 py-12">
         <div className="container px-4 md:px-6">
-          <h2 className="text-2xl font-bold text-black mb-8">Productos Destacados</h2>
+          <h2 className="mb-8 text-2xl font-bold text-black">Productos Destacados</h2>
           <ProductGrid />
         </div>
       </section>
     </MainLayout>
-  )
+  );
 }

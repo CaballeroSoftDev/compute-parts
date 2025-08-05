@@ -1,22 +1,25 @@
-import type { Metadata } from "next"
-import { PageLayout } from "@/components/layout/PageLayout"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Mail, Phone, MapPin, Clock, Send } from "lucide-react"
+import type { Metadata } from 'next';
+import { PageLayout } from '@/components/layout/PageLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Mail, Phone, MapPin, Clock, Send } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: "Contacto | CompuParts",
+  title: 'Contacto | CompuParts',
   description:
-    "Ponte en contacto con CompuParts para resolver tus dudas o recibir asesoramiento técnico especializado.",
-}
+    'Ponte en contacto con CompuParts para resolver tus dudas o recibir asesoramiento técnico especializado.',
+};
 
 export default function ContactPage() {
   return (
-    <PageLayout title="Contacto" description="Estamos aquí para ayudarte. Ponte en contacto con nuestro equipo.">
+    <PageLayout
+      title="Contacto"
+      description="Estamos aquí para ayudarte. Ponte en contacto con nuestro equipo."
+    >
       <div className="grid gap-8 md:grid-cols-3">
         <div className="md:col-span-2">
           <Card>
@@ -26,31 +29,55 @@ export default function ContactPage() {
             </CardHeader>
             <CardContent>
               <form className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="name">Nombre completo</Label>
-                    <Input id="name" placeholder="Tu nombre" required />
+                    <Input
+                      id="name"
+                      placeholder="Tu nombre"
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Correo electrónico</Label>
-                    <Input id="email" type="email" placeholder="tu@email.com" required />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="tu@email.com"
+                      required
+                    />
                   </div>
                 </div>
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="phone">Teléfono (opcional)</Label>
-                    <Input id="phone" placeholder="(55) 1234-5678" />
+                    <Input
+                      id="phone"
+                      placeholder="(55) 1234-5678"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="subject">Asunto</Label>
-                    <Input id="subject" placeholder="¿En qué podemos ayudarte?" required />
+                    <Input
+                      id="subject"
+                      placeholder="¿En qué podemos ayudarte?"
+                      required
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="message">Mensaje</Label>
-                  <Textarea id="message" placeholder="Escribe tu mensaje aquí..." className="min-h-[150px]" required />
+                  <Textarea
+                    id="message"
+                    placeholder="Escribe tu mensaje aquí..."
+                    className="min-h-[150px]"
+                    required
+                  />
                 </div>
-                <Button type="submit" className="w-full md:w-auto bg-[#007BFF] hover:bg-blue-600">
+                <Button
+                  type="submit"
+                  className="w-full bg-[#007BFF] hover:bg-blue-600 md:w-auto"
+                >
                   <Send className="mr-2 h-4 w-4" /> Enviar mensaje
                 </Button>
               </form>
@@ -66,7 +93,7 @@ export default function ContactPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-start space-x-3">
-                <MapPin className="h-5 w-5 text-[#007BFF] mt-0.5" />
+                <MapPin className="mt-0.5 h-5 w-5 text-[#007BFF]" />
                 <div>
                   <h3 className="font-medium">Dirección</h3>
                   <p className="text-sm text-gray-500">Av. Tecnológica #123, Col. Innovación</p>
@@ -74,7 +101,7 @@ export default function ContactPage() {
                 </div>
               </div>
               <div className="flex items-start space-x-3">
-                <Phone className="h-5 w-5 text-[#007BFF] mt-0.5" />
+                <Phone className="mt-0.5 h-5 w-5 text-[#007BFF]" />
                 <div>
                   <h3 className="font-medium">Teléfono</h3>
                   <p className="text-sm text-gray-500">Ventas: (55) 1234-5678</p>
@@ -82,7 +109,7 @@ export default function ContactPage() {
                 </div>
               </div>
               <div className="flex items-start space-x-3">
-                <Mail className="h-5 w-5 text-[#007BFF] mt-0.5" />
+                <Mail className="mt-0.5 h-5 w-5 text-[#007BFF]" />
                 <div>
                   <h3 className="font-medium">Correo Electrónico</h3>
                   <p className="text-sm text-gray-500">ventas@compuparts.com</p>
@@ -90,7 +117,7 @@ export default function ContactPage() {
                 </div>
               </div>
               <div className="flex items-start space-x-3">
-                <Clock className="h-5 w-5 text-[#007BFF] mt-0.5" />
+                <Clock className="mt-0.5 h-5 w-5 text-[#007BFF]" />
                 <div>
                   <h3 className="font-medium">Horario de atención</h3>
                   <p className="text-sm text-gray-500">Lunes a Viernes: 9:00 AM - 6:00 PM</p>
@@ -106,8 +133,8 @@ export default function ContactPage() {
               <CardTitle>Ubicación</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="aspect-video bg-gray-100 rounded-md flex items-center justify-center">
-                <p className="text-gray-500 text-sm">Mapa interactivo</p>
+              <div className="flex aspect-video items-center justify-center rounded-md bg-gray-100">
+                <p className="text-sm text-gray-500">Mapa interactivo</p>
               </div>
             </CardContent>
           </Card>
@@ -118,7 +145,11 @@ export default function ContactPage() {
               <CardTitle>Preguntas frecuentes</CardTitle>
             </CardHeader>
             <CardContent>
-              <Accordion type="single" collapsible className="w-full">
+              <Accordion
+                type="single"
+                collapsible
+                className="w-full"
+              >
                 <AccordionItem value="item-1">
                   <AccordionTrigger>¿Cuál es el tiempo de entrega?</AccordionTrigger>
                   <AccordionContent>
@@ -145,5 +176,5 @@ export default function ContactPage() {
         </div>
       </div>
     </PageLayout>
-  )
+  );
 }

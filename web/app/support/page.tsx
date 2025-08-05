@@ -1,10 +1,10 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Phone, Mail, FileText, HelpCircle } from "lucide-react"
-import { PageLayout } from "@/components/layout/PageLayout"
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Phone, Mail, FileText, HelpCircle } from 'lucide-react';
+import { PageLayout } from '@/components/layout/PageLayout';
 
 export default function SupportPage() {
   return (
@@ -12,35 +12,35 @@ export default function SupportPage() {
       title="Centro de Soporte"
       description="Estamos aquí para ayudarte con cualquier duda o problema que puedas tener."
     >
-      <section className="py-8 md:py-12 bg-white">
+      <section className="bg-white py-8 md:py-12">
         <div className="container px-4 md:px-6">
           {/* Opciones de contacto */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+          <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2">
             <Card>
-              <CardContent className="p-6 flex flex-col items-center text-center">
-                <div className="rounded-full bg-blue-100 p-3 mb-4">
+              <CardContent className="flex flex-col items-center p-6 text-center">
+                <div className="mb-4 rounded-full bg-blue-100 p-3">
                   <Phone className="h-6 w-6 text-[#007BFF]" />
                 </div>
-                <h3 className="text-lg font-bold mb-2">Teléfono</h3>
-                <p className="text-gray-600 mb-4">Llámanos de lunes a viernes de 9:00 a 18:00 hrs.</p>
+                <h3 className="mb-2 text-lg font-bold">Teléfono</h3>
+                <p className="mb-4 text-gray-600">Llámanos de lunes a viernes de 9:00 a 18:00 hrs.</p>
                 <p className="font-medium">(999) 123-4567</p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-6 flex flex-col items-center text-center">
-                <div className="rounded-full bg-blue-100 p-3 mb-4">
+              <CardContent className="flex flex-col items-center p-6 text-center">
+                <div className="mb-4 rounded-full bg-blue-100 p-3">
                   <Mail className="h-6 w-6 text-[#007BFF]" />
                 </div>
-                <h3 className="text-lg font-bold mb-2">Correo Electrónico</h3>
-                <p className="text-gray-600 mb-4">Escríbenos y te responderemos en menos de 24 horas.</p>
+                <h3 className="mb-2 text-lg font-bold">Correo Electrónico</h3>
+                <p className="mb-4 text-gray-600">Escríbenos y te responderemos en menos de 24 horas.</p>
                 <p className="font-medium">soporte@compuparts.mx</p>
               </CardContent>
             </Card>
           </div>
 
           {/* Formulario de contacto y FAQ */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             {/* Formulario de contacto */}
             <Card>
               <CardHeader>
@@ -51,33 +51,62 @@ export default function SupportPage() {
               </CardHeader>
               <CardContent>
                 <form className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <label htmlFor="name" className="text-sm font-medium">
+                      <label
+                        htmlFor="name"
+                        className="text-sm font-medium"
+                      >
                         Nombre completo
                       </label>
-                      <Input id="name" placeholder="Tu nombre" />
+                      <Input
+                        id="name"
+                        placeholder="Tu nombre"
+                      />
                     </div>
                     <div className="space-y-2">
-                      <label htmlFor="email" className="text-sm font-medium">
+                      <label
+                        htmlFor="email"
+                        className="text-sm font-medium"
+                      >
                         Correo electrónico
                       </label>
-                      <Input id="email" type="email" placeholder="tu@correo.com" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="tu@correo.com"
+                      />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor="subject" className="text-sm font-medium">
+                    <label
+                      htmlFor="subject"
+                      className="text-sm font-medium"
+                    >
                       Asunto
                     </label>
-                    <Input id="subject" placeholder="Asunto de tu mensaje" />
+                    <Input
+                      id="subject"
+                      placeholder="Asunto de tu mensaje"
+                    />
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor="message" className="text-sm font-medium">
+                    <label
+                      htmlFor="message"
+                      className="text-sm font-medium"
+                    >
                       Mensaje
                     </label>
-                    <Textarea id="message" placeholder="Escribe tu mensaje aquí" rows={5} />
+                    <Textarea
+                      id="message"
+                      placeholder="Escribe tu mensaje aquí"
+                      rows={5}
+                    />
                   </div>
-                  <Button type="submit" className="w-full bg-[#007BFF] hover:bg-[#0056b3]">
+                  <Button
+                    type="submit"
+                    className="w-full bg-[#007BFF] hover:bg-[#0056b3]"
+                  >
                     Enviar Mensaje
                   </Button>
                 </form>
@@ -86,8 +115,12 @@ export default function SupportPage() {
 
             {/* Preguntas frecuentes */}
             <div>
-              <h2 className="text-2xl font-bold mb-6">Preguntas Frecuentes</h2>
-              <Accordion type="single" collapsible className="w-full">
+              <h2 className="mb-6 text-2xl font-bold">Preguntas Frecuentes</h2>
+              <Accordion
+                type="single"
+                collapsible
+                className="w-full"
+              >
                 <AccordionItem value="item-1">
                   <AccordionTrigger>¿Cuál es el tiempo de entrega de los productos?</AccordionTrigger>
                   <AccordionContent>
@@ -138,19 +171,22 @@ export default function SupportPage() {
                 </AccordionItem>
               </Accordion>
 
-              <div className="mt-8 p-6 bg-gray-50 rounded-lg">
+              <div className="mt-8 rounded-lg bg-gray-50 p-6">
                 <div className="flex items-start gap-4">
-                  <div className="rounded-full bg-blue-100 p-2 mt-1">
+                  <div className="mt-1 rounded-full bg-blue-100 p-2">
                     <HelpCircle className="h-5 w-5 text-[#007BFF]" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold mb-2">¿No encuentras lo que buscas?</h3>
-                    <p className="text-gray-600 mb-4">
+                    <h3 className="mb-2 text-lg font-bold">¿No encuentras lo que buscas?</h3>
+                    <p className="mb-4 text-gray-600">
                       Consulta nuestra base de conocimientos completa o contacta directamente con nuestro equipo de
                       soporte.
                     </p>
                     <div className="flex flex-wrap gap-3">
-                      <Button variant="outline" className="gap-2 border-[#007BFF] text-[#007BFF] bg-transparent">
+                      <Button
+                        variant="outline"
+                        className="gap-2 border-[#007BFF] bg-transparent text-[#007BFF]"
+                      >
                         <FileText className="h-4 w-4" />
                         Base de Conocimientos
                       </Button>
@@ -163,10 +199,10 @@ export default function SupportPage() {
 
           {/* Mapa de ubicación */}
           <div className="mt-12">
-            <h2 className="text-2xl font-bold mb-6">Visítanos</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2 rounded-lg overflow-hidden border h-[300px] bg-gray-100 flex items-center justify-center">
-                <div className="text-center p-6">
+            <h2 className="mb-6 text-2xl font-bold">Visítanos</h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              <div className="flex h-[300px] items-center justify-center overflow-hidden rounded-lg border bg-gray-100 md:col-span-2">
+                <div className="p-6 text-center">
                   <p className="text-gray-500">Mapa de ubicación</p>
                   <p className="text-sm text-gray-400">
                     (Aquí se mostraría un mapa interactivo con la ubicación de la tienda)
@@ -175,13 +211,13 @@ export default function SupportPage() {
               </div>
               <div className="space-y-4">
                 <div>
-                  <h3 className="font-bold mb-2">Tienda Principal</h3>
+                  <h3 className="mb-2 font-bold">Tienda Principal</h3>
                   <p className="text-gray-600">Calle 60 #123 x 45 y 47</p>
                   <p className="text-gray-600">Col. Centro, Mérida, Yucatán</p>
                   <p className="text-gray-600">CP 97000</p>
                 </div>
                 <div>
-                  <h3 className="font-bold mb-2">Horario de Atención</h3>
+                  <h3 className="mb-2 font-bold">Horario de Atención</h3>
                   <p className="text-gray-600">Lunes a Viernes: 9:00 - 18:00</p>
                   <p className="text-gray-600">Sábados: 9:00 - 14:00</p>
                   <p className="text-gray-600">Domingos: Cerrado</p>
@@ -193,5 +229,5 @@ export default function SupportPage() {
         </div>
       </section>
     </PageLayout>
-  )
+  );
 }
